@@ -1,0 +1,5 @@
+Resources:
+http://www.ics.uci.edu/~gopi/CS211B/RayTracing%20tutorial.pdf
+http://www.scratchapixel.com/old/lessons/3d-basic-lessons/lesson-7-intersecting-simple-shapes/ray-sphere-intersection/
+http://cs.brown.edu/courses/cs123/docs/implicit_and_parametric_equations.pdf
+http://mathinsight.org/surface_defined_implicitly
