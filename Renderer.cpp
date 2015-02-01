@@ -49,7 +49,7 @@ void Renderer::render()
 		//traverse rows
 		for(unsigned j = 0; j < image->width; ++j)
 		{
-			if(i == 290 && j == 420)
+			if(i == 231 && j == 430)
 				debugBreak = true;
 			//normalize x
 			x = (2 * (j+.5f) / image->width)-1;
@@ -88,16 +88,22 @@ void Renderer::render()
 							float temp0, temp1;
 							if(testSphere(shadowRay, sphereList[s2], temp0, temp1))
 							{
-								inShadow = true;
-								break;
+								//inShadow = true;
 							}
 						}
-						/*if(inShadow)
+						if(inShadow)
 							finalCol = glm::vec3(0, 0, 0);
-						else*/
-						//finalCol = sphereList[s].color *glm::dot(normal, -shadowRay.dir); //* light.intensity;
-						
-						//finalCol = sphereList[s].color;
+						else
+						{
+							float c = glm::dot(normal, shadowRay.dir);
+							
+							finalCol = sphereList[s].color *glm::dot(normal, shadowRay.dir); //* light.intensity;	
+							if(c < 0)
+							{
+								finalCol = glm::vec3(0, 0, 0);
+							}
+							finalCol += ambientColor*ambientIntensity;
+						}
 						image->data[i*image->width+j] = finalCol;
 					}
 				}

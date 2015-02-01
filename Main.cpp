@@ -15,6 +15,8 @@ void main(char** args)
 	Image image(800, 600);
 	renderer.image = &image;
 
+	renderer.setAmbient(glm::vec3(255, 255, 255), 0.1f);
+
 	renderer.render();
 
 	image.output("./OutputImage.ppm");

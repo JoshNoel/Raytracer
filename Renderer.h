@@ -30,8 +30,16 @@ public:
 
 	void addSphere(Sphere s){ sphereList.push_back(s); }
 	void addLight(Light l){ lightList.push_back(l); }
-
+	
+	void setAmbient(glm::vec3 color, float intensity) 
+	{ 
+		ambientColor = color; 
+		ambientIntensity = intensity;
+	}
 private:
+	glm::vec3 ambientColor;
+	float ambientIntensity;
+	
 	std::vector<Sphere> sphereList;
 	std::vector<Light> lightList;
 
