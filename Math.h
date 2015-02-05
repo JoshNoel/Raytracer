@@ -1,5 +1,8 @@
 #pragma once
 #include <algorithm>
+
+#define EPSILON 
+
 class Math
 {
 public:

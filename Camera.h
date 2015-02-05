@@ -10,6 +10,7 @@ public:
 	glm::vec3 up, direction, right, position;
 	float fov;
 	float viewDistance;
+	float focalLength;
 
 	inline void setPosition(glm::vec3 v)
 	{ position = v; }

@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include "glm\glm.hpp"
+#include "Object.h"
 class Sphere
+	: public Object
 {
 	/*
 	*Sphere implicit=
@@ -29,11 +31,9 @@ class Sphere
 	///////////NOTE: vector²=vector·vector/////////////
 public:
 	Sphere();
-	Sphere(glm::vec3 pos, float radius, glm::vec3 color);
+	Sphere(glm::vec3 pos, float radius, Material mat = Material());
 	~Sphere();
-
-	glm::vec3 pos;
+	OBJECT_TYPE getType() const override { return OBJECT_TYPE::SPHERE; }
 	float radius;
-	glm::vec3 color;
 };
 

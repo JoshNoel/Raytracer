@@ -5,12 +5,14 @@
 #include <vector>
 #include "Camera.h"
 #include "Light.h"
+#include "Plane.h"
+#include <memory>
 
 class Renderer
 {
 public:
 	Renderer();
-	Renderer(std::vector<Sphere> spheres, Image* image);
+	Renderer(std::vector<std::unique_ptr<Object>> objects, Image* image);
 	~Renderer();
 
 	void render();
@@ -24,11 +26,10 @@ public:
 	* p1 will contain position of first intersection(or only if tangent)
 	* p2 will contain position of second intersection
 	*/
-	bool testSphere(Ray, Sphere, float& p0, float& p1);
 	Image* image;
 	Camera camera;
 
-	void addSphere(Sphere s){ sphereList.push_back(s); }
+	void addObject(std::unique_ptr<Object> o) { objectList.push_back(std::move(o)); }
 	void addLight(Light l){ lightList.push_back(l); }
 	
 	void setAmbient(glm::vec3 color, float intensity) 
@@ -40,8 +41,10 @@ private:
 	glm::vec3 ambientColor;
 	float ambientIntensity;
 	
-	std::vector<Sphere> sphereList;
+	std::vector<std::unique_ptr<Object>> objectList;
 	std::vector<Light> lightList;
 
+	bool testObject(const Ray&, Object*, float& p0, float& p1);
+	glm::vec3 calcNormal(Object*, glm::vec3 point);
 };
 
