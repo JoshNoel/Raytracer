@@ -19,4 +19,5 @@ ADD_EXECUTABLE(Raytracer
 	Sphere.cpp
 	TriObject.cpp
 	)
-	
+
+	TARGET_LINK_LIBRARIES(Raytracer LodePNG)
