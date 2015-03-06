@@ -4,10 +4,31 @@ project (Raytracer)
 SET(Raytracer_VERSION_MAJOR 1)
 SET(Raytracer_VERSION_MINOR 0)
 
-ADD_SUBDIRECTORY(src)
+INCLUDE_DIRECTORIES(src)
 
-ADD_SUBDIRECTORY(lib)
+CONFIGURE_FILE(
+	src/RaytracerConfig.h.in 
+	src/RaytracerConfig.h
+	)
+ADD_EXECUTABLE(Raytracer
+	src/Camera.cpp
+	src/Main.cpp
+	src/Image.cpp
+	src/Light.cpp
+	src/Material.cpp
+	src/Math.cpp
+	src/Object.cpp	
+	src/Plane.cpp
+	src/Ray.cpp
+	src/Renderer.cpp
+	src/Sphere.cpp
+	src/TriObject.cpp
+	lib/lodepng/lodepng.cpp
+	)
 
-TARGET_LINK_LIBRARIES(Raytracer lib/lodepng)
 
-INSTALL(TARGETS Raytracer DESTINATION bin)
+set(GLM_INCLUDE_DIR lib/glm)
+INCLUDE_DIRECTORIES(${GLM_INCLUDE_DIR})
+
+set(LODEPNG_DIR lib/lodepng)
+INCLUDE_DIRECTORIES(${LODEPNG_DIR})
