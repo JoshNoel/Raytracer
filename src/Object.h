@@ -9,8 +9,9 @@ public:
 
 	enum OBJECT_TYPE
 	{
-		SPHERE = 0,
-		PLANE
+		TRIANGLE_BASED = 0,
+		SPHERE,
+		PLANE		
 	};
 
 	virtual OBJECT_TYPE getType() const = 0;

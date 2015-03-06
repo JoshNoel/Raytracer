@@ -1,4 +1,5 @@
 #include "Renderer.h"
+#include "TriObject.h"
 void main(char** args)
 {
 	Renderer renderer;
@@ -14,6 +15,10 @@ void main(char** args)
 	std::unique_ptr<Object> plane = std::make_unique<Plane>(glm::vec3(0, -2, -10), glm::vec3(0, 1, 0), Material(glm::vec3(255,0,0)));
 	renderer.addObject(std::move(plane));
 
+	std::unique_ptr<TriObject> box = std::make_unique<TriObject>(glm::vec3(-2, 1, -11), Material(glm::vec3(255, 0, 0)));
+	if(!box->loadOBJ("./docs/models/box.obj")){}
+	renderer.addObject(std::move(box));
+
 	/*for(unsigned i = 0; i < 5; ++i)
 	{
 		std::unique_ptr<Object> o = std::make_unique<Sphere>(
@@ -22,6 +27,7 @@ void main(char** args)
 			glm::vec3(rand() % 255, rand() % 255, rand() % 255));
 		renderer.addObject(std::move(o));
 	}*/
+
 	Light light;
 	light.pos = glm::vec3(-1.f, 4.0f, -3.0f);
 	light.color = glm::vec3(255, 197, 143);

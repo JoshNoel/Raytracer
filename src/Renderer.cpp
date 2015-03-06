@@ -1,7 +1,7 @@
 #include "Renderer.h"
 #include "Math.h"
 #include <iostream>
-
+#include "TriObject.h"
 
 Renderer::Renderer(std::vector<std::unique_ptr<Object>> objects, Image* i)
 	:image(i), camera()
@@ -48,6 +48,19 @@ bool Renderer::testObject(const Ray& ray, Object* object, float& p0, float& p1)
 				//std::cout << "intersection/n";
 			return (p0 > 0);
 		}
+	}
+
+	case Object::OBJECT_TYPE::TRIANGLE_BASED:
+	{
+		/*TriObject* tri = dynamic_cast<TriObject*>(object);
+		float val = glm::dot(ray.dir, tri->normal);
+		if(val != 0)
+		{
+			p0 = p1 = glm::dot((plane->position - ray.pos), plane->normal) / val;
+			//if(p0 > 0)
+			//std::cout << "intersection/n";
+			return (p0 > 0);
+		}*/
 	}
 	default:
 		return false;
