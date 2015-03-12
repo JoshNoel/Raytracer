@@ -44,7 +44,6 @@ private:
 	std::vector<std::unique_ptr<Object>> objectList;
 	std::vector<Light> lightList;
 
-	bool testObject(const Ray&, Object*, float& p0, float& p1);
-	glm::vec3 calcNormal(Object*, glm::vec3 point);
+	const float SHADOW_RAY_LENGTH = 20.0f;
 };
 

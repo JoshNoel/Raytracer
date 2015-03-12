@@ -16,6 +16,8 @@ public:
 	~Plane();
 
 	OBJECT_TYPE getType() const override{ return OBJECT_TYPE::PLANE; }
+	bool intersects(const Ray ray, float& t0, float& t1) const override;
+	glm::vec3 calcNormal(glm::vec3 p0) const override;
 
 	glm::vec3 normal;
 };

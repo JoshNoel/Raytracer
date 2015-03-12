@@ -34,6 +34,8 @@ public:
 	Sphere(glm::vec3 pos, float radius, Material mat = Material());
 	~Sphere();
 	OBJECT_TYPE getType() const override { return OBJECT_TYPE::SPHERE; }
+	bool intersects(const Ray ray, float& t0, float& t1) const override;
+	glm::vec3 calcNormal(glm::vec3 p0) const override;
 	float radius;
 };
 

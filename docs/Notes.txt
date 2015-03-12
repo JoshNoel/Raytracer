@@ -14,6 +14,10 @@ http://www.cs.rit.edu/~jmg/courses/cgII/20041/slides/raytrace-assn-3.pdf
 Ray-Plane intersection
 http://en.wikipedia.org/wiki/Line%E2%80%93plane_intersection
 
+Ray-Triangle intersection
+http://courses.cs.washington.edu/courses/cse457/09sp/lectures/triangle_intersection.pdf
+https://www.youtube.com/watch?v=EZXz-uPyCyA
+
 Vector Math
 http://chortle.ccsu.edu/VectorLessons/vectorIndex.html#08
 http://math.stackexchange.com/questions/13261/how-to-get-a-reflection-vector
@@ -21,6 +25,10 @@ http://math.stackexchange.com/questions/13261/how-to-get-a-reflection-vector
 Bitmap
 http://tipsandtricks.runicsoft.com/Cpp/BitmapTutorial.html
 http://en.wikipedia.org/wiki/BMP_file_format
+
+KD Trees
+http://en.wikipedia.org/wiki/K-d_tree
+http://web.stanford.edu/class/cs106l/handouts/assignment-3-kdtree.pdf
 
 TODO:
 parametrically define shapes

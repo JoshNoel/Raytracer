@@ -2,15 +2,16 @@
 
 
 Object::Object(glm::vec3 pos, Material mat)
-	: position(pos), material(mat)
+	: position(pos), material(mat), aabb(BoundingBox())
 {
 }
 
 Object::Object()
-	: position(0, 0, 0), material()
+	: Object(glm::vec3(0, 0, 0), Material())
 {
 }
 
 Object::~Object()
 {
 }
+

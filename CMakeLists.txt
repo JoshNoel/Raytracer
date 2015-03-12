@@ -11,6 +11,7 @@ CONFIGURE_FILE(
 	src/RaytracerConfig.h
 	)
 ADD_EXECUTABLE(Raytracer
+	lib/lodepng/lodepng.cpp
 	src/Camera.cpp
 	src/Main.cpp
 	src/Image.cpp
@@ -23,7 +24,7 @@ ADD_EXECUTABLE(Raytracer
 	src/Renderer.cpp
 	src/Sphere.cpp
 	src/TriObject.cpp
-	lib/lodepng/lodepng.cpp
+	src/BoundingBox.cpp
 	)
 
 

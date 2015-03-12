@@ -6,7 +6,7 @@ Camera::Camera()
 	direction(0, 0, -1),
 	up(0, 1, 0),
 	fov(45),
-	viewDistance(100.f)
+	viewDistance(50.f)
 {
 }
 
