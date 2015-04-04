@@ -34,6 +34,16 @@ public:
 	Sphere(glm::vec3 pos, float radius, Material mat = Material());
 	~Sphere();
 	OBJECT_TYPE getType() const override { return OBJECT_TYPE::SPHERE; }
+
+	/*Tests for ray sphere intersection using Math.solveQuadratic(see Sphere.h)
+	* returns result of determinant
+	*	-1 = no intersection
+	*	 0 = ray is tangent
+	*	 1 = 2 intersections
+	*
+	* t0 will contain position of first intersection(or only if tangent)
+	* t1 will contain position of second intersection
+	*/
 	bool intersects(const Ray ray, float& t0, float& t1) const override;
 	glm::vec3 calcNormal(glm::vec3 p0) const override;
 	float radius;

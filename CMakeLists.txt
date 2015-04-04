@@ -25,6 +25,8 @@ ADD_EXECUTABLE(Raytracer
 	src/Sphere.cpp
 	src/TriObject.cpp
 	src/BoundingBox.cpp
+	src/Scene.cpp
+	src/Logger.cpp
 	)
 
 

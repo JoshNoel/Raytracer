@@ -30,8 +30,15 @@ KD Trees
 http://en.wikipedia.org/wiki/K-d_tree
 http://web.stanford.edu/class/cs106l/handouts/assignment-3-kdtree.pdf
 
+GPU Parralel
+http://devblogs.nvidia.com/parallelforall/thinking-parallel-part-i-collision-detection-gpu/
+
+BVH
+http://image.diku.dk/projects/media/christian.bay.kasper.andersen.06B.pdf
+
 TODO:
 parametrically define shapes
-triangle intersection for meshes
+**triangle intersection for meshes** DONE
 light falloff
-new light types
+new light types (spot, volume?)
+implement and test various acceleration structures and creation techniques

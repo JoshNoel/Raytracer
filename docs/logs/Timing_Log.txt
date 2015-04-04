@@ -1,0 +1,12 @@
+Raytracer -- TIMING LOG
+
+No Accel: RELEASE
+
+Image Output Time: 637726
+Render Time: 93756
+===========================
+No Accel: DEBUG
+
+Image Output Time: 2170228
+Render Time: 4769185
+
