@@ -1,6 +1,9 @@
 #include "Renderer.h"
-#include "TriObject.h"
+#include "Plane.h"
+#include "Sphere.h"
+#include "GeometryObj.h"
 #include "Logger.h"
+
 
 void main(char** args)
 {
@@ -9,12 +12,17 @@ void main(char** args)
 	Scene scene;
 
 
-	std::unique_ptr<Object> plane = std::make_unique<Plane>(glm::vec3(0, -2, -10), glm::vec3(0, 1, 0), Material(glm::vec3(255, 0, 0)));
+	Plane planeShape = Plane(glm::vec3(0, -2, -10), glm::vec3(0, 1, 0));
+	std::unique_ptr<GeometryObj> plane = std::make_unique<GeometryObj>(&planeShape, Material(glm::vec3(255, 0, 0)));
 	scene.addObject(std::move(plane));
 
-	std::unique_ptr<Object> sphere = std::make_unique<Sphere>(glm::vec3(0, 0, -6), 1, Material(glm::vec3(57, 166, 213)));
+	Sphere sphereShape = Sphere(glm::vec3(0, 0, -6), 1);
+	std::unique_ptr<GeometryObj> sphere = std::make_unique<GeometryObj>(&sphereShape, Material(glm::vec3(57, 166, 213)));
 	scene.addObject(std::move(sphere));
-	std::unique_ptr<Object> sphere2 = std::make_unique<Sphere>(glm::vec3(.9, 0.5, -8), 1, glm::vec3(200, 0, 0));
+	
+	Sphere sphere2Shape = Sphere(glm::vec3(.9, 0.5, -8), 1);
+	std::unique_ptr<GeometryObj> sphere2 = std::make_unique<GeometryObj>(&sphere2Shape, Material(glm::vec3(200, 0, 0)));
+
 	scene.addObject(std::move(sphere2));
 
 	Renderer renderer(&scene, &image);

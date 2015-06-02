@@ -2,6 +2,7 @@
 #include "MathHelper.h"
 #include <iostream>
 #include "TriObject.h"
+#include "GeometryObj.h"
 
 Renderer::Renderer(const Scene* s, Image* i)
 	:image(i), camera(), scene(s)
@@ -43,24 +44,22 @@ void Renderer::render()
 			primary.dir = x*camera.right + y*camera.up + camera.direction;
 			primary.dir = glm::normalize(primary.dir);
 			//Check collision...generate shadow rays
-			float minCollision = camera.viewDistance;
+			primary.thit = camera.viewDistance;
 			for(unsigned s = 0; s < scene->objectList.size(); ++s)
 			{
-				if(s == 0 && i > 700)
-					int k = 2;
-				if(scene->objectList[s]->getType() != Object::PLANE)
+				/*if(scene->objectList[s]->getType() != Object::PLANE)
 				{
 					if(!scene->objectList[s]->aabb.intersects(primary))
 						continue;
-				}
+				}*/
 				float p0, p1;
-				p0 = p1 = minCollision;
+				p0 = p1 = INFINITY;
 				//test collision, implicit point on ray stored in p0 and p1
-				if(scene->objectList[s]->intersects(primary, p0, p1))
+				if(scene->objectList[s]->intersects(primary, &p0))
 				{
-					if(p0 > minCollision || p0 < 0)
+					if(p0 > primary.thit || p0 < 0)
 						continue;
-					minCollision = p0;
+					primary.thit = p0;
 					Ray shadowRay;
 					shadowRay.pos = primary.pos + primary.dir*p0;
 					glm::vec3 finalCol;
@@ -69,40 +68,44 @@ void Renderer::render()
 					//iterate lights
 					for(auto light : scene->lightList)
 					{	
-						glm::vec3 normal = scene->objectList[s]->calcNormal(shadowRay.pos);
-						normal = glm::normalize(normal);
-						shadowRay.dir = light.pos - shadowRay.pos;
-						shadowRay.dir = glm::normalize(shadowRay.dir);
-						//if pointing opposite directions skip light
-						/*if(glm::dot(normal, shadowRay.dir) <= 0)
-							continue;*/
-						bool inShadow = false;
-						//check if in shadow
-						for(unsigned s2 = 0; s2 < scene->objectList.size(); ++s2)
+
+						if(scene->objectList[s]->getType() == Object::OBJECT_TYPE::GEOMETRY)
 						{
-							if(s2 == s) continue;
-							float temp0, temp1;
-							temp0 = temp1 = SHADOW_RAY_LENGTH;
-							if(scene->objectList[s2]->intersects(shadowRay, temp0, temp1))
+							glm::vec3 normal = dynamic_cast<GeometryObj*>(scene->objectList[s].get())->getShape()->calcIntersectionNormal(shadowRay.pos);
+							normal = glm::normalize(normal);
+							shadowRay.dir = light.pos - shadowRay.pos;
+							shadowRay.dir = glm::normalize(shadowRay.dir);
+							//if pointing opposite directions skip light
+							/*if(glm::dot(normal, shadowRay.dir) <= 0)
+								continue;*/
+							bool inShadow = false;
+							//check if in shadow
+							for(unsigned s2 = 0; s2 < scene->objectList.size(); ++s2)
 							{
-								//if(temp0 > 0)
+								if(s2 == s) continue;
+								float temp0, temp1;
+								temp0 = temp1 = SHADOW_RAY_LENGTH;
+								if(scene->objectList[s2]->intersects(shadowRay, &temp0))
+								{
+									//if(temp0 > 0)
 									inShadow = true;
+								}
 							}
-						}
-						if(inShadow)
-							finalCol = glm::vec3(0, 0, 0);
-						else
-						{						
-							finalCol = scene->objectList[s]->getMaterial().color * glm::max(0.0f, glm::dot(normal, shadowRay.dir)); //* light.intensity;	
-							/*if(c < 0)
-							{
+							if(inShadow)
 								finalCol = glm::vec3(0, 0, 0);
-							}*/
+							else
+							{
+								finalCol = dynamic_cast<GeometryObj*>(scene->objectList[s].get())->getMaterial().color * glm::max(0.0f, glm::dot(normal, shadowRay.dir)); //* light.intensity;	
+								/*if(c < 0)
+								{
+									finalCol = glm::vec3(0, 0, 0);
+								}*/
+							}
+							finalCol += scene->ambientColor*scene->ambientIntensity;
+							finalCol = glm::min(finalCol, glm::vec3(255, 255, 255));
+							//finalCol = scene->objectList[s]->getMaterial().color;
+							image->data[i*image->width + j] = finalCol;
 						}
-						finalCol += scene->ambientColor*scene->ambientIntensity;
-						finalCol = glm::min(finalCol, glm::vec3(255, 255, 255));
-						//finalCol = scene->objectList[s]->getMaterial().color;
-						image->data[i*image->width+j] = finalCol;
 					}
 				}
 			}

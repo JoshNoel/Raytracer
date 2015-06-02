@@ -2,41 +2,34 @@
 #include "MathHelper.h"
 
 Sphere::Sphere()
-	: Sphere(glm::vec3(), 1, Material())
+	: Sphere(glm::vec3(), 1)
 {
 }
 
-Sphere::Sphere(glm::vec3 p, float r, Material mat)
+Sphere::Sphere(glm::vec3 p, float r)
 	: radius(r),
-	Object(p, mat)
+	Shape(p)
 {
-	aabb.minBounds.x = -radius;
-	aabb.minBounds.y = -radius;
-	aabb.minBounds.z = radius;
-
-	aabb.maxBounds.x = radius;
-	aabb.maxBounds.y = radius;
-	aabb.maxBounds.z = -radius;
-
-	aabb.minBounds += position;
-	aabb.maxBounds += position;
+	aabb = BoundingBox(glm::vec3(-radius, -radius, radius) + position,
+		glm::vec3(radius, radius, -radius) + position);
 }
 
-bool Sphere::intersects(const Ray ray, float& t0, float& t1) const
+bool Sphere::intersects(Ray& ray, float* thit) const
 {
 	glm::vec3 val = (ray.pos - this->position);
 	float t = glm::dot(ray.dir, val);
 	//test for intersections
+	float t0, t1;
 	if(!Math::solveQuadratic(1.0f, 2.0f*glm::dot(ray.dir, val), glm::dot(val, val) - this->radius*this->radius, t0, t1))
 		return false;
 	//make x0 the closer point
-	if(t1<t0) std::swap(t0, t1);
+	t0 < t1 ? *thit = t0 : *thit = t1;
 	return true;
 }
 
-glm::vec3 Sphere::calcNormal(glm::vec3 p0) const
+glm::vec3 Sphere::calcIntersectionNormal(glm::vec3 intPos) const
 {
-	return p0 - this->position;
+	return intPos - this->position;
 }
 
 Sphere::~Sphere()

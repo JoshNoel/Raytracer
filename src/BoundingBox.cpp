@@ -1,7 +1,5 @@
 #include "BoundingBox.h"
-#include <limits>
-#include <utility>
-#define AABB_MAX 10000
+#include "MathHelper.h"
 
 BoundingBox::BoundingBox(glm::vec3 minB, glm::vec3 maxB)
 	: minBounds(minB), maxBounds(maxB)
@@ -9,7 +7,7 @@ BoundingBox::BoundingBox(glm::vec3 minB, glm::vec3 maxB)
 }
 
 BoundingBox::BoundingBox()
-	: BoundingBox(glm::vec3(-AABB_MAX, -AABB_MAX, AABB_MAX), glm::vec3(AABB_MAX, AABB_MAX, -AABB_MAX))
+	: BoundingBox(glm::vec3(-INFINITY, -INFINITY, INFINITY), glm::vec3(INFINITY, INFINITY, -INFINITY))
 {
 }
 

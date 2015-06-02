@@ -1,25 +1,27 @@
 #pragma once
-#include "Object.h"
+#include "Shape.h"
 #include <string>
 #include <vector>
+#include "Triangle.h"
 
 class TriObject
-	: public Object
+	: public Shape
 {
 public:
-	TriObject(glm::vec3, Material = Material());
+	TriObject(glm::vec3);
 	~TriObject();
 
 	bool loadOBJ(std::string path);
 
-	std::vector<glm::vec3> verts;
-	long collTriIndex;
+	std::vector<Triangle> tris;
+	mutable int collTriIndex;
 
-	bool intersects(const Ray ray, float& t0, float& t1) const override;
-	glm::vec3 calcNormal(glm::vec3 p0) const override;
+	bool intersects(Ray& ray, float* thit) const override;
+	glm::vec3 calcIntersectionNormal(glm::vec3) const override;
 
 protected:
-	OBJECT_TYPE getType() const override{ return OBJECT_TYPE::TRIANGLE_BASED; };
+	SHAPE_TYPE getType() const override{ return SHAPE_TYPE::TRIANGLE_MESH; };
+
 
 private:
 };

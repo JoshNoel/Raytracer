@@ -2,6 +2,7 @@
 #include <algorithm>
 
 #define EPSILON 
+#define INFINITY FLT_MAX
 
 class Math
 {

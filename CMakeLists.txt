@@ -27,7 +27,7 @@ ADD_EXECUTABLE(Raytracer
 	src/BoundingBox.cpp
 	src/Scene.cpp
 	src/Logger.cpp
-	)
+	src/GeometryObj.cpp)
 
 
 set(GLM_INCLUDE_DIR lib/glm)

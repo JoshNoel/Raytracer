@@ -1,7 +1,7 @@
 #pragma once
 #include <chrono>
 #include <string>
-#include <hash_map>
+#include <unordered_map>
 
 class Logger
 {
@@ -31,5 +31,5 @@ private:
 	static std::chrono::steady_clock clock;
 	static std::chrono::steady_clock::time_point startTime;
 	//Maps desc of time to time
-	static std::hash_map<std::string, std::chrono::duration<double>> timerMap;
+	static std::unordered_map<std::string, std::chrono::duration<double>> timerMap;
 };

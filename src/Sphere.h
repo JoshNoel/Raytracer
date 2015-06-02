@@ -1,8 +1,8 @@
 ﻿#pragma once
 #include "glm\glm.hpp"
-#include "Object.h"
+#include "Shape.h"
 class Sphere
-	: public Object
+	: public Shape
 {
 	/*
 	*Sphere implicit=
@@ -31,9 +31,9 @@ class Sphere
 	///////////NOTE: vector²=vector·vector/////////////
 public:
 	Sphere();
-	Sphere(glm::vec3 pos, float radius, Material mat = Material());
+	Sphere(glm::vec3 pos, float radius);
 	~Sphere();
-	OBJECT_TYPE getType() const override { return OBJECT_TYPE::SPHERE; }
+	SHAPE_TYPE getType() const override { return SHAPE_TYPE::SPHERE; }
 
 	/*Tests for ray sphere intersection using Math.solveQuadratic(see Sphere.h)
 	* returns result of determinant
@@ -44,8 +44,9 @@ public:
 	* t0 will contain position of first intersection(or only if tangent)
 	* t1 will contain position of second intersection
 	*/
-	bool intersects(const Ray ray, float& t0, float& t1) const override;
-	glm::vec3 calcNormal(glm::vec3 p0) const override;
+	bool intersects(Ray& ray, float* thit) const override;
+	glm::vec3 calcIntersectionNormal(glm::vec3 intPos) const override;
+
 	float radius;
 };
 

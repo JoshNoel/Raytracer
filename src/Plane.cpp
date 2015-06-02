@@ -4,28 +4,32 @@
 
 Plane::Plane()
 	: normal(glm::vec3(0,1,0)),
-	Object()
+	Shape(glm::vec3())
 {
 }
 
-Plane::Plane(glm::vec3 position, glm::vec3 normal, Material mat)
+Plane::Plane(glm::vec3 position, glm::vec3 normal)
 	: normal(normal),
-	Object(position, mat)
+	Shape(position)
 {
 }
 
-bool Plane::intersects(const Ray ray, float& t0, float& t1) const
+bool Plane::intersects(Ray& ray, float* thit) const
 {
 	float val = glm::dot(ray.dir, this->normal);
 	if(val < 0)
 	{
-		t0 = t1 = glm::dot((this->position - ray.pos), this->normal) / val;
-		return (t0 > 0);
+		float temp = glm::dot((this->position - ray.pos), this->normal) / val;
+		if(temp < *thit)
+		{
+			*thit = temp;
+			return true;
+		}
 	}
 	return false;
 }
 
-glm::vec3 Plane::calcNormal(glm::vec3 p0) const
+glm::vec3 Plane::calcIntersectionNormal(glm::vec3) const
 {
 	return this->normal;
 }

@@ -1,8 +1,9 @@
-Resources:
+Generic Resources:
 http://www.ics.uci.edu/~gopi/CS211B/RayTracing%20tutorial.pdf
 http://www.scratchapixel.com/old/lessons/3d-basic-lessons/lesson-7-intersecting-simple-shapes/ray-sphere-intersection/
 http://cs.brown.edu/courses/cs123/docs/implicit_and_parametric_equations.pdf
 http://mathinsight.org/surface_defined_implicitly
+http://pbrt.org/chapters/pbrt-2ed-chap4.pdf
 
 Shading overview
 http://graphics.cs.cmu.edu/nsp/course/15-462/Fall04/slides/08-shading.pdf
@@ -35,6 +36,7 @@ http://devblogs.nvidia.com/parallelforall/thinking-parallel-part-i-collision-det
 
 BVH
 http://image.diku.dk/projects/media/christian.bay.kasper.andersen.06B.pdf
+http://cdn.intechopen.com/pdfs-wm/34468.pdf
 
 TODO:
 parametrically define shapes

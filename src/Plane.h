@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "Object.h"
+#include "Shape.h"
 /*
 *(P-P₀)·n=0
 *P = input
@@ -8,16 +8,16 @@
 *
 */
 class Plane :
-	public Object
+	public Shape
 {
 public:
 	Plane();
-	Plane(glm::vec3, glm::vec3, Material = Material());
+	Plane(glm::vec3, glm::vec3);
 	~Plane();
 
-	OBJECT_TYPE getType() const override{ return OBJECT_TYPE::PLANE; }
-	bool intersects(const Ray ray, float& t0, float& t1) const override;
-	glm::vec3 calcNormal(glm::vec3 p0) const override;
+	SHAPE_TYPE getType() const override{ return SHAPE_TYPE::PLANE; }
+	bool intersects(Ray& ray, float* thit) const override;
+	glm::vec3 calcIntersectionNormal(glm::vec3) const;
 
 	glm::vec3 normal;
 };
