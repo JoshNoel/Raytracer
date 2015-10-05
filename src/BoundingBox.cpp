@@ -7,7 +7,7 @@ BoundingBox::BoundingBox(glm::vec3 minB, glm::vec3 maxB)
 }
 
 BoundingBox::BoundingBox()
-	: BoundingBox(glm::vec3(-INFINITY, -INFINITY, INFINITY), glm::vec3(INFINITY, INFINITY, -INFINITY))
+	: BoundingBox(glm::vec3(-_INFINITY, -_INFINITY, _INFINITY), glm::vec3(_INFINITY, _INFINITY, -_INFINITY))
 {
 }
 
@@ -15,7 +15,51 @@ BoundingBox::~BoundingBox()
 {
 }
 
-bool BoundingBox::intersects(const Ray ray) const
+void BoundingBox::join(const BoundingBox& bbox)
+{
+	//join minBounds
+	if(minBounds.x > bbox.minBounds.x)
+		minBounds.x = bbox.minBounds.x;
+	if(minBounds.y > bbox.minBounds.y)
+		minBounds.y = bbox.minBounds.y;
+	//maxBounds.z < minBounds.z because -z away from camera direction
+	if(minBounds.z < bbox.minBounds.z)
+		minBounds.z = bbox.minBounds.z;
+
+	//join maxBounds
+	if(maxBounds.x < bbox.maxBounds.x)
+		maxBounds.x = bbox.maxBounds.x;
+	if(maxBounds.y < bbox.maxBounds.y)
+		maxBounds.y = bbox.maxBounds.y;
+	//maxBounds.z < minBounds.z because -z away from camera direction
+	if(maxBounds.z > bbox.maxBounds.z)
+		maxBounds.z = bbox.maxBounds.z;
+}
+
+int BoundingBox::getLongestAxis() const
+{
+	float xLength = maxBounds.x - minBounds.x;
+	float yLength = maxBounds.y - minBounds.y;
+	//lesser z is maxBound because -z is into scene, therefore lesser number = farther from camera
+	float zLength = minBounds.z - maxBounds.z;
+
+	if(xLength - yLength < 0)
+	{
+		if(yLength - zLength < 0)
+			return 2;
+		else
+			return 1;
+	}
+
+	return 0;
+}
+
+glm::vec3 BoundingBox::getCentroid() const
+{
+	return glm::vec3((minBounds + maxBounds) / 2.0f);
+}
+
+bool BoundingBox::intersects(const Ray& ray) const
 {
 	//Ray = O+dt
 	//Bmin = box minimum bounds on each axis
@@ -25,6 +69,13 @@ bool BoundingBox::intersects(const Ray ray) const
 	//O(x,y,z)+d(x,y,z)tmin(x,y,z) = Bmin(x,y,z) <-- intersection of a function with a line(at what input, t, does the ray's respective coordinate match the box's minimum coordinate
 	//tmin = (Bmin-O)/d
 
+	/*		   -x	   +x
+				|		|
+	  dir.x > 0	|		|	dir.x < 0	
+	----------->|		|<-------------
+				|		|
+				|		|
+	*/
 	//if ray is coming from left(dir.x > 0) then negative x is min
 	//if ray is coming from right(dir.x < 0) then positive x is min
 	float tminX, tmaxX;
@@ -53,11 +104,24 @@ bool BoundingBox::intersects(const Ray ray) const
 		tminY = (maxBounds.y - ray.pos.y) / ray.dir.y;
 	}
 
+	/*    minX			   maxX
+		   |				|
+		 1 |				|	2
+  maxY ____|________________|______
+		   |				|
+		   |	 Inside		|
+  minY ____|________________|______
+		   |				|
+		 3 |				|	4
+		   |				|
+	*/
 	//if tymax < txmin then ray misses
+	//It clips the top left corner (1) outside the box
 	if(tmaxY < tminX)
 		return false;
 
 	//if txmax < tymin then ray misses
+	//It clips the bottom right corner (4) outside the box
 	if(tmaxX < tminY)
 		return false;
 	 

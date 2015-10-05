@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "glm\glm.hpp"
 #include "Shape.h"
+
 class Sphere
 	: public Shape
 {
@@ -44,8 +45,8 @@ public:
 	* t0 will contain position of first intersection(or only if tangent)
 	* t1 will contain position of second intersection
 	*/
-	bool intersects(Ray& ray, float* thit) const override;
-	glm::vec3 calcIntersectionNormal(glm::vec3 intPos) const override;
+	bool intersects(Ray& ray, float* thit0, float* thit1) const override;
+	glm::vec3 calcWorldIntersectionNormal(glm::vec3 intPos) const override;
 
 	float radius;
 };

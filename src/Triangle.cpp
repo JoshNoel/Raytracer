@@ -1,21 +1,16 @@
 #include "Triangle.h"
 #include "glm\gtx\transform.hpp"
 #include "TriObject.h"
+#include "GeometryObj.h"
 
 
-Triangle::Triangle(const std::array<glm::vec3, 3>& p, TriObject* pare)
-	: points(p), parent(pare), Shape((p[0] + p[1] + p[2]) / 3.0f)
+Triangle::Triangle(const std::array<glm::vec3, 3>& p)
+	: points(p), Shape(getWorldPos())
 {
-
 }
 
 Triangle::~Triangle()
 {
-}
-
-Shape::SHAPE_TYPE Triangle::getType() const
-{
-	return SHAPE_TYPE::TRIANGLE;
 }
 
 glm::vec3 Triangle::calcObjectNormal() const
@@ -23,7 +18,7 @@ glm::vec3 Triangle::calcObjectNormal() const
 	return glm::normalize(glm::cross(points[1] - points[0], points[2] - points[0]));
 }
 
-glm::vec3 Triangle::calcIntersectionNormal(glm::vec3) const
+glm::vec3 Triangle::calcWorldIntersectionNormal(glm::vec3) const
 {
 	std::array<glm::vec3, 3> p = getWorldCoords();
 	return glm::normalize(glm::cross(p[1] - p[0], p[2] - p[0]));
@@ -35,21 +30,20 @@ std::array<glm::vec3, 3> Triangle::getWorldCoords() const
 	for(unsigned int i = 0; i < 3; ++i)
 	{
 		glm::vec4 v = glm::vec4(points[i], 1);
-		p[i] = glm::vec3(glm::translate(parent->position) * v);
+		p[i] = glm::vec3(glm::translate(position) * v);
 	}
 	return p;
 }
 
 glm::vec3 Triangle::getWorldPos() const
 {
-	glm::vec4 pos = glm::vec4(position, 1);
-	return glm::vec3(glm::translate(parent->position) * pos);
+	return position + glm::vec3((points[0] + points[1] + points[2]) / 3.0f);
 }
 
-bool Triangle::intersects(Ray& ray, float* thit) const
+bool Triangle::intersects(Ray& ray, float* thit0, float* thit1) const
 {
-	glm::vec3 normal = calcIntersectionNormal(glm::vec3());
-	glm::vec3 position = getWorldPos();
+	glm::vec3 normal = calcWorldIntersectionNormal(glm::vec3());
+	glm::vec3 position = getWorldPos();	 
 	std::array<glm::vec3, 3> points = getWorldCoords();
 
 	float y = glm::dot(normal, ray.dir);
@@ -72,9 +66,9 @@ bool Triangle::intersects(Ray& ray, float* thit) const
 					ray.thit = t;
 				}
 
-				if(t < *thit)
+				if(t < *thit0)
 				{
-					*thit = t;
+					*thit0 = *thit1 = t;
 					return true;
 				}
 			}

@@ -37,6 +37,14 @@ http://devblogs.nvidia.com/parallelforall/thinking-parallel-part-i-collision-det
 BVH
 http://image.diku.dk/projects/media/christian.bay.kasper.andersen.06B.pdf
 http://cdn.intechopen.com/pdfs-wm/34468.pdf
+http://www.sci.utah.edu/~wald/Publications/2007/ParallelBVHBuild/fastbuild.pdf
+http://pbrt.org/chapters/pbrt-2ed-chap4.pdf
+	SAH splitting costs from pg. 220, along with bucket idea
+
+Unary Predicate
+http://stackoverflow.com/questions/1067558/pass-an-unary-predicate-to-a-function-in-c
+
+
 
 TODO:
 parametrically define shapes

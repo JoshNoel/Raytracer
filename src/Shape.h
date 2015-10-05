@@ -2,10 +2,15 @@
 #include "Ray.h"
 #include "BoundingBox.h"
 
+class GeometryObj;
+
+//Describes shape that is a part of a GeometryObject and has a bounding box
 class Shape
 {
 public:
-	glm::vec3 position;
+	~Shape();
+
+	BoundingBox aabb;
 
 	enum SHAPE_TYPE
 	{
@@ -15,15 +20,16 @@ public:
 		PLANE
 	};
 
-	~Shape();
+	glm::vec3 position;
 
-	virtual glm::vec3 calcIntersectionNormal(glm::vec3) const = 0;
-	virtual bool intersects(Ray& ray, float* thit) const = 0;
+	virtual bool intersects(Ray& ray, float* thit, float* thit0) const = 0;
+	virtual glm::vec3 calcWorldIntersectionNormal(glm::vec3) const = 0;
 	virtual SHAPE_TYPE getType() const = 0;
 
-	BoundingBox aabb;
+	GeometryObj* parent;
+
 protected:
-	Shape(glm::vec3 pos);
+	Shape(const glm::vec3& pos);
 
 };
 

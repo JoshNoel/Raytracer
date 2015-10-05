@@ -20,3 +20,8 @@ No Accel: RELEASE
 
 Render Time: 124473
 Image Output Time: 383206
+===========================
+No Accel: RELEASE
+
+Render Time: 130083
+Image Output Time: 439291

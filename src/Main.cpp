@@ -12,7 +12,7 @@ void main(char** args)
 	Scene scene;
 
 
-	Plane planeShape = Plane(glm::vec3(0, -2, -10), glm::vec3(0, 1, 0));
+	/*Plane planeShape = Plane(glm::vec3(0, -2, -10), glm::vec3(0, 1, 0));
 	std::unique_ptr<GeometryObj> plane = std::make_unique<GeometryObj>(&planeShape, Material(glm::vec3(255, 0, 0)));
 	scene.addObject(std::move(plane));
 
@@ -22,16 +22,23 @@ void main(char** args)
 	
 	Sphere sphere2Shape = Sphere(glm::vec3(.9, 0.5, -8), 1);
 	std::unique_ptr<GeometryObj> sphere2 = std::make_unique<GeometryObj>(&sphere2Shape, Material(glm::vec3(200, 0, 0)));
+	scene.addObject(std::move(sphere2));*/
 
-	scene.addObject(std::move(sphere2));
+
+	//SCENE.CREATEKDTREE
+
+
+	TriObject* dragon = new TriObject(glm::vec3(0, -1, -6));
+	if(dragon->loadOBJ("./docs/models/dragon.obj"))
+	{
+		dragon->initAccelStruct();
+		scene.addObject(std::make_unique<GeometryObj>(dragon, Material(glm::vec3(200, 0, 0))));
+	}
 
 	Renderer renderer(&scene, &image);
 
 
-	/*std::unique_ptr<TriObject> box = std::make_unique<TriObject>(glm::vec3(-1, 1, -6), Material(glm::vec3(222, 157,83)));
-	if(!box->loadOBJ("./docs/models/box.obj")){}
-	renderer.addObject(std::move(box));*/
-	
+
 	/*for(unsigned i = 0; i < 5; ++i)
 	{
 		std::unique_ptr<Object> o = std::make_unique<Sphere>(
@@ -49,15 +56,17 @@ void main(char** args)
 
 	scene.setAmbient(glm::vec3(255, 255, 255), 0.1f);
 
-	//scene.initAccelStruct();
-
-	Logger::startClock();
 	renderer.render();
+
+	/*Logger::startClock();
 	Logger::elapsed("Render Time");
 
-	Logger::startClock();
-	image.outputPNG("./docs/examples/Output.png");
-	Logger::elapsed("Image Output Time");
+	Logger::startClock();*/
 
-	Logger::printLog("./docs/logs/Timing_Log.txt", "No Accel");
+
+
+	image.outputPNG("./docs/examples/ReflectionOutput.png");
+	/*Logger::elapsed("Image Output Time");
+
+	Logger::printLog("./docs/logs/Timing_Log.txt", "Reflection");*/
 }
