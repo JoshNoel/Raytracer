@@ -1,27 +1,46 @@
-Raytracer -- TIMING LOG
-
-No Accel: RELEASE
-
-Image Output Time: 637726
-Render Time: 93756
+TIMING LOG
 ===========================
-No Accel: DEBUG
+Threads: Main Only, Direct To Image: RELEASE
 
-Image Output Time: 2170228
-Render Time: 4769185
-
+Render Time: 33.0957
+Image Output Time: 0.416173
 ===========================
-No Accel: RELEASE
+Threads: 1, Direct To Image: RELEASE
 
-Render Time: 170644
-Image Output Time: 312286
+Render Time: 33.2403
+Image Output Time: 0.407015
 ===========================
-No Accel: RELEASE
+Threads: 1, Copy Image Data: RELEASE
 
-Render Time: 124473
-Image Output Time: 383206
+Render Time: 32.4423
+Image Output Time: 0.403225
 ===========================
-No Accel: RELEASE
+Threads: 4, Direct To Image: RELEASE
 
-Render Time: 130083
-Image Output Time: 439291
+Render Time: 21.1815
+Image Output Time: 0.39333
+===========================
+Threads: 4, Copy To Image: RELEASE
+
+Render Time: 20.1031
+Image Output Time: 0.482337
+===========================
+Threads: 10, Copy To Image: RELEASE
+
+Render Time: 14.8785
+Image Output Time: 0.333583
+===========================
+Threads: 10, Copy To Image: RELEASE
+
+Render Time: 15.2745
+Image Output Time: 0.380061	
+===========================
+Threads: 10, Copy To Image: RELEASE
+
+Render Time: 14.4136
+Image Output Time: 0.91709
+===========================
+Threads: 10, Copy To Image: RELEASE
+
+Render Time: 15.4567
+Image Output Time: 0.369126

@@ -59,7 +59,7 @@ glm::vec3 BoundingBox::getCentroid() const
 	return glm::vec3((minBounds + maxBounds) / 2.0f);
 }
 
-bool BoundingBox::intersects(const Ray& ray) const
+bool BoundingBox::intersects(const Ray& ray, float& thit0, float& thit1) const
 {
 	//Ray = O+dt
 	//Bmin = box minimum bounds on each axis
@@ -128,8 +128,19 @@ bool BoundingBox::intersects(const Ray& ray) const
 	float t0 = (tminX > tminY) ? tminX : tminY;
 	float t1 = (tmaxX < tmaxY) ? tmaxX : tmaxY;
 
-	float tminZ = (minBounds.z - ray.pos.z) / ray.dir.z;
-	float tmaxZ = (maxBounds.z - ray.pos.z) / ray.dir.z;
+	//if ray is coming from front(dir.z < 0) then positive z is min
+	//if ray is coming from back(dir.z > 0) then negative z is min
+	float tminZ, tmaxZ;
+	if(ray.dir.z < 0)
+	{
+		tmaxZ = (maxBounds.z - ray.pos.z) / ray.dir.z;
+		tminZ = (minBounds.z - ray.pos.z) / ray.dir.z;
+	}
+	else
+	{
+		tmaxZ = (minBounds.z - ray.pos.z) / ray.dir.z;
+		tminZ = (maxBounds.z - ray.pos.z) / ray.dir.z;
+	}
 
 	//if ray enters the x and y bounds of the aabb after the maximimum z, it missed the box behind
 	if(t0 > tmaxZ)
@@ -142,8 +153,14 @@ bool BoundingBox::intersects(const Ray& ray) const
 		t0 = tminZ;
 	if(tmaxZ < t1)
 		t1 = tmaxZ;
-	/*if(t0 < 0 || t1 < 0)
-		return false;*/
 
+	thit0 = t0;
+	thit1 = t1;
 	return true;
+}
+
+bool BoundingBox::intersects(const Ray& ray) const
+{
+	float t0, t1;
+	return intersects(ray, t0, t1);
 }

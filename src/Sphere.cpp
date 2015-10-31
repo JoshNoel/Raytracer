@@ -14,16 +14,22 @@ Sphere::Sphere(glm::vec3 p, float r)
 		glm::vec3(radius, radius, -radius) + position);
 }
 
-bool Sphere::intersects(Ray& ray, float* thit0, float* thit1) const
+bool Sphere::intersects(Ray& ray, float& thit0, float& thit1) const
 {
-	glm::vec3 val = (ray.pos - this->position);
-	float t = glm::dot(ray.dir, val);
+	glm::vec3 toRayPos = (ray.pos - this->position);
+	float dot = glm::dot(ray.dir, toRayPos);
 	//test for intersections
-	if(!Math::solveQuadratic(1.0f, 2.0f*glm::dot(ray.dir, val), glm::dot(val, val) - this->radius*this->radius, *thit0, *thit1))
+	if(!Math::solveQuadratic(1.0f, 2.0f*dot, glm::dot(toRayPos, toRayPos) - this->radius*this->radius, thit0, thit1))
 		return false;
-	//make x0 the closer point
-	if(*thit1 < *thit0)
+
+	//if intersections are behind ray return false
+	if(thit0 < 0 && thit1 < 0)
+		return false;
+	//make t0 the closer point, in front of ray position
+	if(thit1 < thit0)
 		std::swap(thit1, thit0);
+	if(thit0 < 0.0f)
+		std::swap(thit0, thit1);
 	return true;
 }
 

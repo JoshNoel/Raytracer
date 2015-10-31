@@ -1,12 +1,12 @@
 #pragma once
 #include "glm\glm.hpp"
+
+class GeometryObj;
 class Ray
 {
 	/*
 	*Ray implicit=
 	*|pos+t(dir)|
-	*
-	*
 	*/
 public:
 	Ray();
@@ -16,6 +16,9 @@ public:
 	glm::vec3 pos;
 	glm::vec3 dir;
 
-	float thit;
+	float thit0;
+	float thit1;
+
+	GeometryObj* hitObject;
 };
 

@@ -5,31 +5,32 @@
 #include "MathHelper.h"
 #include "BoundingBox.h"
 
-bool TriObject::checkTris(const std::vector<Triangle*>* tris, Ray& ray, float* thit0, float* thit1) const
+bool TriObject::checkTris(const std::vector<Triangle*>* tris, Ray& ray, float& thit0, float& thit1) const
 {
-	assert(thit0 != nullptr);
-	assert(thit1 != nullptr);
 	//iterate vertices
 	float t0 = _INFINITY;
 	float t1 = -_INFINITY;
 	bool hit = false;
 	for(int i = 0; i < tris->size(); ++i)
 	{
-		if((*tris)[i]->intersects(ray, &t0, &t1))
+		if((*tris)[i]->intersects(ray, t0, t1))
 		{
-			if(t0 < *thit0) *thit0 = t0;
-			if(t1 > *thit1) *thit1 = t1;
-			hit = true;
-			collisionTri = (*tris)[i];
+			if(t0 < thit0)
+			{
+				thit0 = t0;
+				collisionTri = (*tris)[i];
+				hit = true;
+			}
+			if(t1 > thit1) thit1 = t1;
 		}
 	}
-	if(*thit0 > *thit1)
+	if(thit0 > thit1)
 		std::swap(thit0, thit1);
 
 	return hit;
 }
 
-bool TriObject::checkNode(Node* node, Ray& ray, float* thit0, float* thit1) const
+bool TriObject::checkNode(Node* node, Ray& ray, float& thit0, float& thit1) const
 {
 	if(node == nullptr)
 		return false;
@@ -39,10 +40,15 @@ bool TriObject::checkNode(Node* node, Ray& ray, float* thit0, float* thit1) cons
 		{
 			return checkTris(node->tris, ray, thit0, thit1);
 		}
-		else
+
+		if(node->left != nullptr)
 		{
 			if(checkNode(node->left, ray, thit0, thit1))
 				return true;
+		}
+
+		if(node->right != nullptr)
+		{
 			if(checkNode(node->right, ray, thit0, thit1))
 				return true;
 		}
@@ -52,7 +58,7 @@ bool TriObject::checkNode(Node* node, Ray& ray, float* thit0, float* thit1) cons
 
 
 TriObject::TriObject(glm::vec3 pos)
-	: Shape(pos)//, collTriIndex(0)
+	: Shape(pos), collisionTri(nullptr)
 {
 }
 
@@ -66,41 +72,21 @@ void TriObject::initAccelStruct()
 	root->createNode(&tris, 0);
 }
 
-bool TriObject::intersects(Ray& ray, float* thit0, float* thit1) const
+bool TriObject::intersects(Ray& ray, float& thit0, float& thit1) const
 {
-	assert(thit0 != nullptr);
-	assert(thit1 != nullptr);
 	//iterate vertices
 	float t0 = _INFINITY;
 	float t1 = -_INFINITY;
 	bool hit = false;
 	Node* node = root;
-	hit = checkNode(node, ray, thit0, thit1);
-	if(*thit0 > *thit1)
-		std::swap(thit0, thit1);
-
-	return (*thit0 != _INFINITY);
-	/*
-	assert(thit0 != nullptr);
-	assert(thit1 != nullptr);
-	//iterate vertices
-	float t0 = _INFINITY;
-	float t1 = -_INFINITY;
-	bool hit = false;
-	for(int i = 0; i < this->tris.size(); ++i)
-	{
-		if(tris[i]->intersects(ray, &t0, &t1))
-		{
-			if(t0 < *thit0) *thit0 = t0;
-			if(t1 > *thit1) *thit1 = t1;
-			hit = true;
-			collTriIndex = i;
-		}
-	}
-	if(*thit0 > *thit1)
-		std::swap(thit0, thit1);
-
-	return hit;*/
+	hit = checkNode(node, ray, t0, t1);
+	if(t0 > t1)
+		std::swap(t0, t1);
+	if(t0 < thit0)
+		thit0 = t0;
+	if(t1 > thit1)
+		thit1 = t1;
+	return hit;
 }
 
 glm::vec3 TriObject::calcWorldIntersectionNormal(glm::vec3 v) const
@@ -223,10 +209,14 @@ bool TriObject::loadOBJ(std::string path)
 			tris.push_back(new Triangle(points));
 			tris.back()->aabb = bbox;
 			tris.back()->parent = this->parent;
-
-			aabb.join(bbox);
+			tris.back()->position = this->position;
 		}
 	}
+
+	//set up object bounding box
+	aabb = tris[0]->aabb;
+	for(int i = 1; i < tris.size(); ++i)
+		aabb.join(tris[i]->aabb);
 	if(ifs.bad())
 		return false;
 

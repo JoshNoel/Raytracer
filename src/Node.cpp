@@ -71,129 +71,132 @@ void Node::createNode(std::vector<Triangle*>* t, unsigned depth)
 			}
 		}
 
-		//Evaluate split after each bucket through SAH
-		//SAH calculation only takes into account buckets that contain tris
-		//SA = surface area of bounding box 
-		//N = num tris in box
-		//Ct = traversal cost = .125
-		//Cost = Ct + Left.SA/SA * Left.N + Right.SA/SA * Right.N
-		//Traversal Cost can be changed to vary based on characteristics of split
-		//Left.N and Right.N represent intersection cost that does not vary with each triangle, 
-		//so just the number of tris is used
-		//SA of rectangular prism = 2(wl + hl + hw)
-		float width = std::abs(aabb.maxBounds.x - aabb.minBounds.x);
-		float height = std::abs(aabb.maxBounds.y - aabb.minBounds.y);
-		float length = std::abs(aabb.minBounds.z - aabb.maxBounds.z);
-		float SA = 2 * (width * height + width * length + length * height);
-		std::vector<float> cost(numBuckets - 1);
-		for(int i = 0; i < numBuckets - 1; i++)
+		if(numBuckets > 1)
 		{
-			float Lwidth = std::fabsf(bucketList[i].bounds.maxBounds.x - bucketList[0].bounds.minBounds.x);
-			float Lheight = std::fabsf(bucketList[i].bounds.maxBounds.y - bucketList[0].bounds.minBounds.y);
-			float Llength = std::fabsf(bucketList[0].bounds.minBounds.z - bucketList[i].bounds.maxBounds.z);
-
-			unsigned int Lcount = 0;
-			for(int j = 0; j <= i; j++)
+			//Evaluate split after each bucket through SAH
+			//SAH calculation only takes into account buckets that contain tris
+			//SA = surface area of bounding box 
+			//N = num tris in box
+			//Ct = traversal cost = .125
+			//Cost = Ct + Left.SA/SA * Left.N + Right.SA/SA * Right.N
+			//Traversal Cost can be changed to vary based on characteristics of split
+			//Left.N and Right.N represent intersection cost that does not vary with each triangle, 
+			//so just the number of tris is used
+			//SA of rectangular prism = 2(wl + hl + hw)
+			float width = std::abs(aabb.maxBounds.x - aabb.minBounds.x);
+			float height = std::abs(aabb.maxBounds.y - aabb.minBounds.y);
+			float length = std::abs(aabb.minBounds.z - aabb.maxBounds.z);
+			float SA = 2 * (width * height + width * length + length * height);
+			std::vector<float> cost(numBuckets - 1);
+			for(int i = 0; i < numBuckets - 1; i++)
 			{
-				Lcount += bucketList[j].count;
-			}
+				float Lwidth = std::fabsf(bucketList[i].bounds.maxBounds.x - bucketList[0].bounds.minBounds.x);
+				float Lheight = std::fabsf(bucketList[i].bounds.maxBounds.y - bucketList[0].bounds.minBounds.y);
+				float Llength = std::fabsf(bucketList[0].bounds.minBounds.z - bucketList[i].bounds.maxBounds.z);
 
-			float Rwidth = std::fabsf(bucketList[numBuckets - 1].bounds.maxBounds.x - bucketList[i + 1].bounds.minBounds.x);
-			float Rheight = std::fabsf(bucketList[numBuckets - 1].bounds.maxBounds.y - bucketList[i + 1].bounds.minBounds.y);
-			float Rlength = std::fabsf(bucketList[i + 1].bounds.minBounds.z - bucketList[numBuckets - 1].bounds.maxBounds.z);
-			unsigned int Rcount = 0;
-			for(int j = i + 1; j < numBuckets; j++)
-			{
-				Rcount += bucketList[j].count;
-			}
-
-			float LSA = 2.0f * (Lwidth*Llength + Lheight*Llength + Lheight*Lwidth);
-			float RSA = 2.0f * (Rwidth*Rlength + Rheight*Rlength + Rheight*Rwidth);
-			cost[i] = traversalCost + intersectionCost*(LSA / SA)*Lcount + intersectionCost*(RSA / SA)*Rcount;
-		}
-
-		//choose split with least cost
-		int splitBucketIndex = 0;
-		float lowestCost = cost[0];
-		for(int i = 1; i < numBuckets - 1; i++)
-		{
-			if(cost[i] < lowestCost)
-			{
-				lowestCost = cost[i];
-				splitBucketIndex = i;
-			}
-		}
-
-		
-		float noSplitCost = intersectionCost * tris->size();
-
-		std::vector<Triangle*>::iterator splitIndex = tris->end();
-		//if cost of traversing current node is less than splitting, make a leaf node
-		//if number of triangles in node is greater than the max in leaf, then split
-		if(noSplitCost > lowestCost && depth < maxDepth)
-		{
-			//float splitPos = bucketList[splitBucketIndex].bounds.maxBounds[splitAxis];
-			int j = 0;
-
-			//If the triangle bounding box centroid is left of the split pos return true
-			//Each Triangle* that returns true comes before those that return false
-			//splitIndex is std::vector<Triangle*>::iterator that points to first Triangle in tris that comes after splitPos
-			splitIndex = std::partition(tris->begin(), tris->end(),
-				[&](const Triangle* tri) -> bool
-			{
-				//if triangle is in bucket less than or equal to splitBucket, than it is in left node
-				float pos = tri->aabb.getCentroid()[splitAxis];
-				float index = std::floorf((pos - minB) / (maxB - minB) * Node::originialNumBuckets);
-				if( index <= bucketNums[splitBucketIndex])
+				unsigned int Lcount = 0;
+				for(int j = 0; j <= i; j++)
 				{
-					return true;
+					Lcount += bucketList[j].count;
 				}
-				else //| 0 | 1 | 2 | 3 | 4 |
+
+				float Rwidth = std::fabsf(bucketList[numBuckets - 1].bounds.maxBounds.x - bucketList[i + 1].bounds.minBounds.x);
+				float Rheight = std::fabsf(bucketList[numBuckets - 1].bounds.maxBounds.y - bucketList[i + 1].bounds.minBounds.y);
+				float Rlength = std::fabsf(bucketList[i + 1].bounds.minBounds.z - bucketList[numBuckets - 1].bounds.maxBounds.z);
+				unsigned int Rcount = 0;
+				for(int j = i + 1; j < numBuckets; j++)
 				{
-					return false;
+					Rcount += bucketList[j].count;
 				}
-				/*if(splitAxis != 2)
+
+				float LSA = 2.0f * (Lwidth*Llength + Lheight*Llength + Lheight*Lwidth);
+				float RSA = 2.0f * (Rwidth*Rlength + Rheight*Rlength + Rheight*Rwidth);
+				cost[i] = traversalCost + intersectionCost*(LSA / SA)*Lcount + intersectionCost*(RSA / SA)*Rcount;
+			}
+
+			//choose split with least cost
+			int splitBucketIndex = 0;
+			float lowestCost = cost[0];
+			for(int i = 1; i < numBuckets - 1; i++)
+			{
+				if(cost[i] < lowestCost)
 				{
-					if(tri->aabb.getCentroid()[splitAxis] < splitPos)
+					lowestCost = cost[i];
+					splitBucketIndex = i;
+				}
+			}
+
+
+			float noSplitCost = intersectionCost * tris->size();
+
+			std::vector<Triangle*>::iterator splitIndex = tris->end();
+			//if cost of traversing current node is less than splitting, make a leaf node
+			//if number of triangles in node is greater than the max in leaf, then split
+			if(noSplitCost > lowestCost && depth < maxDepth)
+			{
+				//float splitPos = bucketList[splitBucketIndex].bounds.maxBounds[splitAxis];
+				int j = 0;
+
+				//If the triangle bounding box centroid is left of the split pos return true
+				//Each Triangle* that returns true comes before those that return false
+				//splitIndex is std::vector<Triangle*>::iterator that points to first Triangle in tris that comes after splitPos
+				splitIndex = std::partition(tris->begin(), tris->end(),
+					[&](const Triangle* tri) -> bool
+				{
+					//if triangle is in bucket less than or equal to splitBucket, than it is in left node
+					float pos = tri->aabb.getCentroid()[splitAxis];
+					float index = std::floorf((pos - minB) / (maxB - minB) * Node::originialNumBuckets);
+					if(index <= bucketNums[splitBucketIndex])
+					{
 						return true;
-					else
+					}
+					else //| 0 | 1 | 2 | 3 | 4 |
+					{
 						return false;
+					}
+					/*if(splitAxis != 2)
+					{
+						if(tri->aabb.getCentroid()[splitAxis] < splitPos)
+							return true;
+						else
+							return false;
+					}
+					else
+					{
+						if(tri->aabb.getCentroid()[splitAxis] > splitPos)
+							return true;
+						else
+							return false;
+					}*/
+				});
+				if(splitIndex == tris->end())
+				{
+					left = new Node();
+					left->createNode(new std::vector<Triangle*>(tris->begin(), splitIndex), depth + 1);
+					leaf = true;
+				}
+				else if(splitIndex == tris->begin())
+				{
+					right = new Node();
+					right->createNode(new std::vector<Triangle*>(splitIndex, tris->end()), depth + 1);
+					leaf = true;
 				}
 				else
 				{
-					if(tri->aabb.getCentroid()[splitAxis] > splitPos)
-						return true;
-					else
-						return false;
-				}*/
-			});
-			if(splitIndex == tris->end())
-			{
-				left = new Node();
-				left->createNode(new std::vector<Triangle*>(tris->begin(), splitIndex), depth + 1);
-				leaf = true;
-			}
-			else if(splitIndex == tris->begin())
-			{
-				right = new Node();
-				right->createNode(new std::vector<Triangle*>(splitIndex, tris->end()), depth + 1);
-				leaf = true;
-			}
-			else
-			{
-				left = new Node();
-				right = new Node();
-				left->createNode(new std::vector<Triangle*>(tris->begin(), splitIndex), depth + 1);
-				right->createNode(new std::vector<Triangle*>(splitIndex, tris->end()), depth + 1);
+					left = new Node();
+					right = new Node();
+					left->createNode(new std::vector<Triangle*>(tris->begin(), splitIndex), depth + 1);
+					right->createNode(new std::vector<Triangle*>(splitIndex, tris->end()), depth + 1);
+				}
 			}
 		}
 	}
 	else
 	{
 		leaf = true;
+		left = nullptr;
+		right = nullptr;
 	}
-	if(leaf == false && left == nullptr && right == nullptr)
-		int j = 0;
 }
 
 const float Node::traversalCost = .125f;

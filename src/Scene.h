@@ -15,9 +15,10 @@ public:
 
 	void addObject(std::unique_ptr<GeometryObj> &o) 
 	{ 
+		o->id = idCounter++;
 		objectList.push_back(std::move(o));
 	}
-	void addLight(Light l){ lightList.push_back(l); }
+	void addLight(const Light& l){ lightList.push_back(l); }
 
 	void setAmbient(glm::vec3 color, float intensity)
 	{
@@ -25,13 +26,23 @@ public:
 		ambientIntensity = intensity;
 	}
 
-	glm::vec3 ambientColor;
-	float ambientIntensity;
+	void setBgColor(glm::vec3 col)
+	{
+		bgColor = col;
+	}
+
+	glm::vec3 ambientColor = glm::vec3(255,255,255);
+	float ambientIntensity = 0.1f;
+	glm::vec3 bgColor = glm::vec3(0,0,0);
 
 	std::vector<std::unique_ptr<GeometryObj>> objectList;
 	std::vector<Light> lightList;
-	//std::array<Node>
 
+	int idCounter = 0;
+
+	const int MAX_RECURSION_DEPTH = 1;
+	const int SHADOW_SAMPLES = 100;
+	const int PRIMARY_SAMPLES = 1;
 private:
 	BoundingBox sceneBox;
 };

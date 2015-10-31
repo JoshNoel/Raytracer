@@ -22,7 +22,7 @@ public:
 	mutable Triangle* collisionTri;
 
 	//returns if ray intersects with bounding box 
-	bool intersects(Ray& ray, float* thit0, float* thit1) const override;
+	bool intersects(Ray& ray, float& thit0, float& thit1) const override;
 	glm::vec3 calcWorldIntersectionNormal(glm::vec3) const override;
 
 protected:
@@ -31,6 +31,6 @@ protected:
 
 private:
 
-	bool checkTris(const std::vector<Triangle*>* tris, Ray& ray, float* thit0, float* thit1) const;
-	bool checkNode(Node* node, Ray& ray, float* thit0, float* thit1) const;
+	bool checkTris(const std::vector<Triangle*>* tris, Ray& ray, float& thit0, float& thit1) const;
+	bool checkNode(Node* node, Ray& ray, float& thit0, float& thit1) const;
 };

@@ -1,8 +1,8 @@
 #pragma once
 #include <algorithm>
 
-#ifndef EPSILON
-	#define EPSILON 
+#ifndef RAY_EPSILON
+	#define RAY_EPSILON 1e-3f;
 #endif
 //Used to define maximum bounds of scene
 //10,000 units in both directions on all axis
@@ -10,6 +10,9 @@
 #ifndef _INFINITY
 	#define _INFINITY 10000.0f
 #endif
+
+#define _PI_ 2.0f*std::acosf(0.0f)
+#define degToRad(d) d*(_PI_ / 180.0f)
 
 class Math
 {

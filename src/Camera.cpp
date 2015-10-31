@@ -1,4 +1,5 @@
 #include "Camera.h"
+#include "MathHelper.h"
 
 
 Camera::Camera()
@@ -6,7 +7,7 @@ Camera::Camera()
 	direction(0, 0, -1),
 	up(0, 1, 0),
 	fov(45),
-	viewDistance(50.f)
+	viewDistance(_INFINITY)
 {
 }
 
@@ -20,7 +21,7 @@ void Camera::calculate(float aspectRatio)
 	up = glm::normalize(up);
 	direction = glm::normalize(direction);
 
-	float fovRad = fov*3.1415 / 180;
+	float fovRad = fov*3.1415f / 180.0f;
 
 	float thfov = tan(fovRad / 2);
 

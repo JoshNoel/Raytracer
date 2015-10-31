@@ -44,7 +44,12 @@ http://pbrt.org/chapters/pbrt-2ed-chap4.pdf
 Unary Predicate
 http://stackoverflow.com/questions/1067558/pass-an-unary-predicate-to-a-function-in-c
 
+Blinn-Phong
+http://www.cs.cornell.edu/courses/cs4620/2012fa/lectures/35raytracing.pdf
+http://sunandblackcat.com/tipFullView.php?l=eng&topicid=30&topic=Phong-Lighting
 
+Refraction
+http://hyperphysics.phy-astr.gsu.edu/hbase/geoopt/refr.html
 
 TODO:
 parametrically define shapes

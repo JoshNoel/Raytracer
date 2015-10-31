@@ -14,6 +14,8 @@ public:
 	inline Material& getMaterial() { return material; }
 	inline Shape* getShape() const { return shape;  }
 
+	int id = -1;
+
 protected:
 
 	Material material;

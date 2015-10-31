@@ -22,10 +22,10 @@ void Logger::printLog(std::string path, std::string title)
 #endif
 	if(timerMap.size() != 0)
 	{
-		std::unordered_map<std::string, std::chrono::duration<double>>::iterator i = timerMap.begin();
+		std::unordered_map<std::string, std::chrono::duration<float, std::chrono::seconds::period>>::iterator i = timerMap.begin();
 		while(i != timerMap.end())
 		{
-			os << i->first << ": " << std::chrono::duration_cast<std::chrono::microseconds>(i->second).count() << std::endl;
+			os << i->first << ": " << i->second.count() << std::endl;
 			i++;
 		}
 	}
@@ -34,4 +34,4 @@ void Logger::printLog(std::string path, std::string title)
 std::chrono::steady_clock Logger::clock;
 std::chrono::steady_clock::time_point Logger::startTime;
 //Maps desc of time to time
-std::unordered_map<std::string, std::chrono::duration<double>> Logger::timerMap;
+std::unordered_map<std::string, std::chrono::duration<float, std::chrono::seconds::period>> Logger::timerMap;

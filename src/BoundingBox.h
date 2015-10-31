@@ -9,6 +9,7 @@ public:
 	BoundingBox(glm::vec3 minBounds, glm::vec3 maxBounds);
 	~BoundingBox();
 
+	bool intersects(const Ray& ray, float& thit0, float& thit1) const;
 	bool intersects(const Ray& ray) const;
 
 	//x=0, y=1, z=2

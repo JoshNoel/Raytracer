@@ -8,21 +8,24 @@ class GeometryObj;
 class Shape
 {
 public:
-	~Shape();
-
-	BoundingBox aabb;
-
 	enum SHAPE_TYPE
 	{
 		TRIANGLE_MESH = 0,
 		TRIANGLE,
 		SPHERE,
-		PLANE
+		PLANE,
+		CUBE
 	};
 
+	~Shape();
+
+	BoundingBox aabb;
 	glm::vec3 position;
 
-	virtual bool intersects(Ray& ray, float* thit, float* thit0) const = 0;
+	//Use Case: Need to find intersection from inside a cube rather than from outside
+	bool flipNormals = false;
+
+	virtual bool intersects(Ray& ray, float& thit0, float& thit1) const = 0;
 	virtual glm::vec3 calcWorldIntersectionNormal(glm::vec3) const = 0;
 	virtual SHAPE_TYPE getType() const = 0;
 
