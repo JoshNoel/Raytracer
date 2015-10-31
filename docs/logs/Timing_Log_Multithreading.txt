@@ -1,0 +1,36 @@
+TIMING LOG - MULTITHREADING
+===========================
+Threads: Main Only, Direct To Image: RELEASE
+
+Render Time: 33.0957
+Image Output Time: 0.416173
+===========================
+Threads: 1, Direct To Image: RELEASE
+
+Render Time: 33.2403
+Image Output Time: 0.407015
+===========================
+Threads: 1, Copy Image Data: RELEASE
+
+Render Time: 32.4423
+Image Output Time: 0.403225
+===========================
+Threads: 4, Direct To Image: RELEASE
+
+Render Time: 21.1815
+Image Output Time: 0.39333
+===========================
+Threads: 4, Copy To Image: RELEASE
+
+Render Time: 20.1031
+Image Output Time: 0.482337
+===========================
+Threads: 10, Copy To Image: RELEASE
+
+Render Time: 14.8785
+Image Output Time: 0.333583
+===========================
+Threads: 10, Copy To Image: RELEASE
+
+Render Time: 15.2745
+Image Output Time: 0.380061	

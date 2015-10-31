@@ -2,41 +2,40 @@
 #include "MathHelper.h"
 
 Sphere::Sphere()
-	: Sphere(glm::vec3(), 1, Material())
+	: Sphere(glm::vec3(), 1)
 {
 }
 
-Sphere::Sphere(glm::vec3 p, float r, Material mat)
+Sphere::Sphere(glm::vec3 p, float r)
 	: radius(r),
-	Object(p, mat)
+	Shape(p)
 {
-	aabb.minBounds.x = -radius;
-	aabb.minBounds.y = -radius;
-	aabb.minBounds.z = radius;
-
-	aabb.maxBounds.x = radius;
-	aabb.maxBounds.y = radius;
-	aabb.maxBounds.z = -radius;
-
-	aabb.minBounds += position;
-	aabb.maxBounds += position;
+	aabb = BoundingBox(glm::vec3(-radius, -radius, radius) + position,
+		glm::vec3(radius, radius, -radius) + position);
 }
 
-bool Sphere::intersects(const Ray ray, float& t0, float& t1) const
+bool Sphere::intersects(Ray& ray, float& thit0, float& thit1) const
 {
-	glm::vec3 val = (ray.pos - this->position);
-	float t = glm::dot(ray.dir, val);
+	glm::vec3 toRayPos = (ray.pos - this->position);
+	float dot = glm::dot(ray.dir, toRayPos);
 	//test for intersections
-	if(!Math::solveQuadratic(1.0f, 2.0f*glm::dot(ray.dir, val), glm::dot(val, val) - this->radius*this->radius, t0, t1))
+	if(!Math::solveQuadratic(1.0f, 2.0f*dot, glm::dot(toRayPos, toRayPos) - this->radius*this->radius, thit0, thit1))
 		return false;
-	//make x0 the closer point
-	if(t1<t0) std::swap(t0, t1);
+
+	//if intersections are behind ray return false
+	if(thit0 < 0 && thit1 < 0)
+		return false;
+	//make t0 the closer point, in front of ray position
+	if(thit1 < thit0)
+		std::swap(thit1, thit0);
+	if(thit0 < 0.0f)
+		std::swap(thit0, thit1);
 	return true;
 }
 
-glm::vec3 Sphere::calcNormal(glm::vec3 p0) const
+glm::vec3 Sphere::calcWorldIntersectionNormal(glm::vec3 intPos) const
 {
-	return p0 - this->position;
+	return intPos - this->position;
 }
 
 Sphere::~Sphere()

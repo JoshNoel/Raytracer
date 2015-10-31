@@ -1,9 +1,64 @@
 #include "TriObject.h"
 #include <fstream>
 #include <istream>
+#include "glm\glm.hpp"
+#include "MathHelper.h"
+#include "BoundingBox.h"
 
-TriObject::TriObject(glm::vec3 pos, Material mat)
-	: Object(pos, mat), collTriIndex(0)
+bool TriObject::checkTris(const std::vector<Triangle*>* tris, Ray& ray, float& thit0, float& thit1) const
+{
+	//iterate vertices
+	float t0 = _INFINITY;
+	float t1 = -_INFINITY;
+	bool hit = false;
+	for(int i = 0; i < tris->size(); ++i)
+	{
+		if((*tris)[i]->intersects(ray, t0, t1))
+		{
+			if(t0 < thit0)
+			{
+				thit0 = t0;
+				collisionTri = (*tris)[i];
+				hit = true;
+			}
+			if(t1 > thit1) thit1 = t1;
+		}
+	}
+	if(thit0 > thit1)
+		std::swap(thit0, thit1);
+
+	return hit;
+}
+
+bool TriObject::checkNode(Node* node, Ray& ray, float& thit0, float& thit1) const
+{
+	if(node == nullptr)
+		return false;
+	if(node->aabb.intersects(ray))
+	{
+		if(node->isLeaf())
+		{
+			return checkTris(node->tris, ray, thit0, thit1);
+		}
+
+		if(node->left != nullptr)
+		{
+			if(checkNode(node->left, ray, thit0, thit1))
+				return true;
+		}
+
+		if(node->right != nullptr)
+		{
+			if(checkNode(node->right, ray, thit0, thit1))
+				return true;
+		}
+	}
+	return false;
+}
+
+
+TriObject::TriObject(glm::vec3 pos)
+	: Shape(pos), collisionTri(nullptr)
 {
 }
 
@@ -11,65 +66,36 @@ TriObject::~TriObject()
 {
 }
 
-bool TriObject::intersects(const Ray ray, float& t0, float& t1) const
+void TriObject::initAccelStruct()
+{
+	root = new Node();
+	root->createNode(&tris, 0);
+}
+
+bool TriObject::intersects(Ray& ray, float& thit0, float& thit1) const
 {
 	//iterate vertices
-	float minT = t0;
+	float t0 = _INFINITY;
+	float t1 = -_INFINITY;
 	bool hit = false;
-	for(unsigned int i = 0; i < this->verts.size(); i += 3)
-	{
-		glm::vec3 A = (verts[i] + this->position);
-		glm::vec3 B = (verts[i + 1] + this->position);
-		glm::vec3 C = (verts[i + 2] + this->position);
-
-		glm::vec3 normal = glm::cross(B - A, C - A);
-		normal = glm::normalize(normal);
-		glm::vec3 position = (A + B + C) / 3.0f;
-		
-		float y = glm::dot(normal, ray.dir);
-		//ray is parrellel to plane of triangle
-		if(y < 1e-9)
-			continue;
-		float x = glm::dot(normal, position - ray.pos);
-		float t = (x / y);
-
-		glm::vec3 intersection = ray.pos + ray.dir*t;
-
-		if(glm::dot(glm::cross(B - A, intersection - A), normal) > 0)
-		{
-			if(glm::dot(glm::cross(C - B, intersection - B), normal) > 0)
-			{
-				if(glm::dot(glm::cross(A - C, intersection - C), normal) > 0)
-				{
-					if(t < t0)
-					{
-						t0 = t;
-						hit = true;
-					}
-				}
-
-			}
-		}
-
-	}
-
+	Node* node = root;
+	hit = checkNode(node, ray, t0, t1);
+	if(t0 > t1)
+		std::swap(t0, t1);
+	if(t0 < thit0)
+		thit0 = t0;
+	if(t1 > thit1)
+		thit1 = t1;
 	return hit;
 }
 
-glm::vec3 TriObject::calcNormal(glm::vec3 p0) const
+glm::vec3 TriObject::calcWorldIntersectionNormal(glm::vec3 v) const
 {
-	//set p1, p2, and p3 to triangle vertices in world space
-	long index = this->collTriIndex;
-	glm::vec3 p1 = this->verts[index] + this->position;
-	glm::vec3 p2 = this->verts[index + 1] + this->position;
-	//TODO read in normals
-	return glm::cross(p0 - p1, p2-p1);
+	return collisionTri->calcWorldIntersectionNormal(v);
 }
 
 bool TriObject::loadOBJ(std::string path)
 {
-	aabb.minBounds = glm::vec3(FLT_MAX, FLT_MAX, -FLT_MAX);
-	aabb.maxBounds = glm::vec3(-FLT_MAX, -FLT_MAX, FLT_MAX);
 	int extStart = path.find_last_of('.');
 	if(path.substr(extStart) != ".obj")
 		return false;
@@ -89,7 +115,7 @@ bool TriObject::loadOBJ(std::string path)
 			int spacePos = line.find_first_of(' ');
 			int nextSpace = line.find(' ', spacePos + 1);
 			float x = std::stof(line.substr(spacePos+1, nextSpace));
-
+			
 			spacePos = nextSpace;
 			nextSpace = line.find(' ', spacePos + 1);
 			float y = std::stof(line.substr(spacePos+1, nextSpace));
@@ -100,7 +126,7 @@ bool TriObject::loadOBJ(std::string path)
 
 			vertices.push_back(glm::vec3(x, y, z));
 
-			//set up aabb
+			/*//set up aabb
 			if(x < aabb.minBounds.x)
 				aabb.minBounds.x = x;
 			if(y < aabb.minBounds.y)
@@ -113,30 +139,87 @@ bool TriObject::loadOBJ(std::string path)
 			if(y > aabb.maxBounds.y)
 				aabb.maxBounds.y = y;
 			if(z < aabb.maxBounds.z)
-				aabb.maxBounds.z = z;
+				aabb.maxBounds.z = z;*/
 		}
 
+		//Create faces from vertex array
 		if(line[0] == 'f')
 		{
+			std::array<glm::vec3, 3> points;
+
 			int spacePos = line.find_first_of(' ');
 			int nextSpace = line.find(' ', spacePos + 1);
-			verts.push_back(vertices.at(std::stoi(line.substr(spacePos+1, nextSpace))-1));
+			points[0] = (vertices.at(std::stoi(line.substr(spacePos+1, nextSpace))-1));
 
 			spacePos = nextSpace;
 			nextSpace = line.find(' ', spacePos + 1);
 			int j = std::stoi(line.substr(spacePos + 1, nextSpace));
-			verts.push_back(vertices.at(std::stoi(line.substr(spacePos+1, nextSpace))-1));
+			points[1] = (vertices.at(std::stoi(line.substr(spacePos+1, nextSpace))-1));
 
 			spacePos = nextSpace;
 			nextSpace = line.find('\n', spacePos + 1);
-			verts.push_back(vertices.at(std::stoi(line.substr(spacePos+1, nextSpace))-1));
+			points[2] = (vertices.at(std::stoi(line.substr(spacePos+1, nextSpace))-1));
+
+			BoundingBox bbox;
+			bbox.minBounds.x = bbox.maxBounds.x = points[0].x;
+			bbox.minBounds.y = bbox.maxBounds.y = points[0].y;
+			bbox.minBounds.z = bbox.maxBounds.z = points[0].z;
+
+			for(int i = 1; i < 3; ++i)
+			{
+				if(points[i].x < bbox.minBounds.x)
+					bbox.minBounds.x = points[i].x;
+				if(points[i].x > bbox.maxBounds.x)
+					bbox.maxBounds.x = points[i].x;
+
+				if(points[i].y < bbox.minBounds.y)
+					bbox.minBounds.y = points[i].y;
+				if(points[i].y > bbox.maxBounds.y)
+					bbox.maxBounds.y = points[i].y;
+
+				//-z axis goes into scene, so the greater the z value the closer it is to the camera
+				//therefore bbox.minBounds.z > bbox.maxBounds.z
+				if(points[i].z > bbox.minBounds.z)
+					bbox.minBounds.z = points[i].z;
+				if(points[i].z < bbox.maxBounds.z)
+					bbox.maxBounds.z = points[i].z;
+			}
+			/*for(int i = 0; i < 3; ++i)
+			{
+				if(points[i].x < bbox.minBounds.x)
+					bbox.minBounds.x = points[i].x;
+				if(points[i].y < bbox.minBounds.y)
+					bbox.minBounds.y = points[i].y;
+				//maxBounds.z < minBounds.z because -z away from camera direction
+				if(points[i].z > bbox.minBounds.z)
+					bbox.minBounds.z = points[i].z;
+
+				if(points[i].x > bbox.maxBounds.x)
+					bbox.maxBounds.x = points[i].x;
+				if(points[i].y > bbox.maxBounds.y)
+					bbox.maxBounds.y = points[i].y;
+				//maxBounds.z < minBounds.z because -z away from camera direction
+				if(points[i].z < bbox.maxBounds.z)
+					bbox.maxBounds.z = points[i].z;
+			}*/
+
+			bbox.minBounds += position;
+			bbox.maxBounds += position;
+
+			tris.push_back(new Triangle(points));
+			tris.back()->aabb = bbox;
+			tris.back()->parent = this->parent;
+			tris.back()->position = this->position;
 		}
 	}
+
+	//set up object bounding box
+	aabb = tris[0]->aabb;
+	for(int i = 1; i < tris.size(); ++i)
+		aabb.join(tris[i]->aabb);
 	if(ifs.bad())
 		return false;
 
-	aabb.minBounds += position;
-	aabb.maxBounds += position;
 	ifs.close();
 	return true;
 }

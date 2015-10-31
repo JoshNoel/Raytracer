@@ -1,19 +1,36 @@
 #pragma once
 #include "glm\glm.hpp"
+#include "Plane.h"
 
 class Light
 {
 public:
-	Light();
-	Light(glm::vec3 p, glm::vec3 c, float i);
-	~Light();
+
 	enum LIGHT_TYPE
 	{
-		POINT = 0
+		POINT = 0,
+		DIRECTIONAL
 	};
 
+	Light(const glm::vec3& pos = glm::vec3(0,0,0), const glm::vec3& color = glm::vec3(255,255,255),
+		float intensity = 10.0f, LIGHT_TYPE type = LIGHT_TYPE::POINT);
+	Light(const Light&);
+	~Light();
+	Light& operator=(const Light&);
+
+	void calcDirection(float xAngle, float yAngle, float zAngle); 
+	void createShape(const Plane&);
+	//void createSphere(const Sphere&);
+
+	
+	LIGHT_TYPE type;
 	float intensity;
 	glm::vec3 color;
 	glm::vec3 pos;
+	glm::vec3 dir = glm::vec3(0,0,-1);
+	bool castsShadow = true;
+	bool isAreaLight = false;
+
+	Plane* areaShape;
 };
 

@@ -1,20 +1,60 @@
 #include "Light.h"
+#include "glm\gtx\rotate_vector.hpp"
 
-
-Light::Light()
-	: pos(0, 0, 0),
-	color(255, 255, 255),
-	intensity(1)
-{
-}
-
-Light::Light(glm::vec3 p, glm::vec3 c, float i)
+Light::Light(const glm::vec3& p, const glm::vec3& c, float i, LIGHT_TYPE type)
 	: pos(p),
 	color(c),
-	intensity(i)
+	intensity(i),
+	type(type)
 {
+	areaShape = nullptr;
 }
 
 Light::~Light()
 {
+	delete areaShape;
+}
+
+Light::Light(const Light& light)
+{
+	type = light.type;
+	intensity = light.intensity;
+	color = light.color;
+	pos = light.pos;
+	dir = light.dir;
+	castsShadow = light.castsShadow;
+	isAreaLight = light.isAreaLight;
+	areaShape = new Plane;
+	*areaShape = *light.areaShape;
+}
+
+Light& Light::operator=(const Light& light)
+{
+	type = light.type;
+	intensity = light.intensity;
+	color = light.color;
+	pos = light.pos;
+	dir = light.dir;
+	castsShadow = light.castsShadow;
+	isAreaLight = light.isAreaLight;
+	areaShape = new Plane;
+	*areaShape = *light.areaShape;
+
+	return *this;
+}
+
+void Light::calcDirection(float xAngle, float yAngle, float zAngle)
+{
+	glm::vec3 vector = glm::vec3(0, 0, -1);
+	vector = glm::rotateX(vector, xAngle);
+	vector = glm::rotateY(vector, yAngle);
+	vector = glm::rotateZ(vector, zAngle);
+
+	dir = glm::normalize(vector);
+}
+
+void Light::createShape(const Plane& shape)
+{
+	areaShape = new Plane(shape);
+	areaShape->position = pos;
 }

@@ -1,7 +1,7 @@
 #pragma once
 #include <chrono>
 #include <string>
-#include <hash_map>
+#include <unordered_map>
 
 class Logger
 {
@@ -14,22 +14,23 @@ public:
 		startTime = clock.now();
 	}
 
-	static inline std::chrono::duration<double> elapsed()
+	//return elapsed time in steady_clock ticks
+	static inline void record(std::string label)
 	{
-		return (clock.now() - startTime);// / (long double)(CLOCKS_PER_SEC);
-	}
-
-	static inline std::chrono::duration<double> elapsed(std::string label)
-	{
-		std::chrono::duration<double> e = elapsed();
-		timerMap.emplace(label, e);
-		return e;
+		timerMap.emplace(label, elapsed());
 	}
 
 	static void printLog(std::string path, std::string title = "default");
 private:
+
+	//return elapsed stead_clock ticks
+	static inline std::chrono::duration<float, std::chrono::seconds::period> elapsed()
+	{
+		return (clock.now() - startTime);
+	}
+
 	static std::chrono::steady_clock clock;
 	static std::chrono::steady_clock::time_point startTime;
-	//Maps desc of time to time
-	static std::hash_map<std::string, std::chrono::duration<double>> timerMap;
+	//Map: description of time TO time
+	static std::unordered_map<std::string, std::chrono::duration<float, std::chrono::seconds::period>> timerMap;
 };

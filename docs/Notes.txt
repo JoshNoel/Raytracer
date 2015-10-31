@@ -1,8 +1,9 @@
-Resources:
+Generic Resources:
 http://www.ics.uci.edu/~gopi/CS211B/RayTracing%20tutorial.pdf
 http://www.scratchapixel.com/old/lessons/3d-basic-lessons/lesson-7-intersecting-simple-shapes/ray-sphere-intersection/
 http://cs.brown.edu/courses/cs123/docs/implicit_and_parametric_equations.pdf
 http://mathinsight.org/surface_defined_implicitly
+http://pbrt.org/chapters/pbrt-2ed-chap4.pdf
 
 Shading overview
 http://graphics.cs.cmu.edu/nsp/course/15-462/Fall04/slides/08-shading.pdf
@@ -35,10 +36,30 @@ http://devblogs.nvidia.com/parallelforall/thinking-parallel-part-i-collision-det
 
 BVH
 http://image.diku.dk/projects/media/christian.bay.kasper.andersen.06B.pdf
+http://cdn.intechopen.com/pdfs-wm/34468.pdf
+http://www.sci.utah.edu/~wald/Publications/2007/ParallelBVHBuild/fastbuild.pdf
+http://pbrt.org/chapters/pbrt-2ed-chap4.pdf
+	SAH splitting costs from pg. 220, along with bucket idea
+
+Unary Predicate
+http://stackoverflow.com/questions/1067558/pass-an-unary-predicate-to-a-function-in-c
+
+Blinn-Phong
+http://www.cs.cornell.edu/courses/cs4620/2012fa/lectures/35raytracing.pdf
+http://sunandblackcat.com/tipFullView.php?l=eng&topicid=30&topic=Phong-Lighting
+
+Refraction
+http://hyperphysics.phy-astr.gsu.edu/hbase/geoopt/refr.html
+
+Soft Shadows
+http://http.developer.nvidia.com/GPUGems2/gpugems2_chapter17.html
 
 TODO:
-parametrically define shapes
 **triangle intersection for meshes** DONE
-light falloff
-new light types (spot, volume?)
-implement and test various acceleration structures and creation techniques
+**light falloff** DONE
+**new light types** DONE (spot, volume?)
+**implement and test various acceleration structures and creation techniques** DONE BVH
+Flip Normals
+Spherical Lights
+Glossy shading
+Global Illumination
