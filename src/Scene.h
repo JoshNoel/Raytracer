@@ -32,7 +32,7 @@ public:
 	}
 
 	glm::vec3 ambientColor = glm::vec3(255,255,255);
-	float ambientIntensity = 0.1f;
+	float ambientIntensity = 0.01f;
 	glm::vec3 bgColor = glm::vec3(0,0,0);
 
 	std::vector<std::unique_ptr<GeometryObj>> objectList;
@@ -41,8 +41,8 @@ public:
 	int idCounter = 0;
 
 	const int MAX_RECURSION_DEPTH = 1;
-	const int SHADOW_SAMPLES = 100;
-	const int PRIMARY_SAMPLES = 1;
+	const int SHADOW_SAMPLES = 64;
+	const int PRIMARY_SAMPLES = 4;
 private:
 	BoundingBox sceneBox;
 };

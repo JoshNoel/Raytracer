@@ -51,9 +51,15 @@ http://sunandblackcat.com/tipFullView.php?l=eng&topicid=30&topic=Phong-Lighting
 Refraction
 http://hyperphysics.phy-astr.gsu.edu/hbase/geoopt/refr.html
 
+Soft Shadows
+http://http.developer.nvidia.com/GPUGems2/gpugems2_chapter17.html
+
 TODO:
-parametrically define shapes
 **triangle intersection for meshes** DONE
-light falloff
-new light types (spot, volume?)
-implement and test various acceleration structures and creation techniques
+**light falloff** DONE
+**new light types** DONE (spot, volume?)
+**implement and test various acceleration structures and creation techniques** DONE BVH
+Flip Normals
+Spherical Lights
+Glossy shading
+Global Illumination

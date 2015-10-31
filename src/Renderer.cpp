@@ -403,6 +403,7 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 				if(light.intensity < 0.0f)
 					light.intensity = 0.0f;
 
+				float lightVisibility = 0.0f;
 				float lightFalloffIntensity = 0.0f;
 				switch(light.type)
 				{
@@ -414,12 +415,8 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 						{
 							float halfX = light.areaShape->getDimensions().x / 2.0f;
 							float halfY = light.areaShape->getDimensions().y / 2.0f;
-							std::uniform_real_distribution<float> distributionX(0, std::nextafterf(1.0f, FLT_MAX));
-							std::uniform_real_distribution<float> distributionY(0, std::nextafterf(1.0f, FLT_MAX));
-
-							glm::vec3 averageShadowDir;
-							float numHits = 0;
-							int index = 1;
+							std::uniform_real_distribution<float> distributionX(-1.0f, std::nextafterf(1.0f, FLT_MAX));
+							std::uniform_real_distribution<float> distributionY(-1.0f, std::nextafterf(1.0f, FLT_MAX));
 
 							//In order to create grid scene->SHADOW_SAMPLES must be a perfect square
 							//TODO fast perfect square check
@@ -450,24 +447,39 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 									glm::vec3 basePos = light.areaShape->position +
 										(light.areaShape->getU() * ((sampleX * gridSquareSideLength) - (sign(sampleX) * gridSquareSideLength / 2.0f))) +
 										(light.areaShape->getV() * ((sampleY * gridSquareSideLength) - (sign(sampleY) * gridSquareSideLength / 2.0f)));
-										
+
 									//add random vector to center of grid square
 									//	this vector will give a random point within the grid square
 									glm::vec3 randVec;
-									randVec = ((gridSquareSideLength / 2.0f) * xPos * light.areaShape->getU()) + 
+									randVec = ((gridSquareSideLength / 2.0f) * xPos * light.areaShape->getU()) +
 										((gridSquareSideLength / 2.0f) * yPos * light.areaShape->getV());
 									glm::vec3 randPosOnPlane = basePos + randVec;
+									/*for(int sample = 0; sample < scene->SHADOW_SAMPLES; sample++)
+									{
+										float xPos = distributionX(rng);
+										float yPos = distributionY(rng);
+										//center of grid square
+										//	traverse each column
+										glm::vec3 basePos = light.areaShape->position;
+
+										//add random vector to center of grid square
+										//	this vector will give a random point within the grid square
+										glm::vec3 randVec;
+										randVec = (halfX * xPos * light.areaShape->getU()) +
+											(halfY * yPos * light.areaShape->getV());
+										glm::vec3 randPosOnPlane = basePos + randVec;*/
 
 									Ray toLight;
 									//Ray starts at intersection point
 									toLight.pos = shadowRay.pos;
 									//Ray goes from intersection, to the randomly generated position
 									toLight.dir = randPosOnPlane - shadowRay.pos;
+									toLight.dir = glm::normalize(toLight.dir);
 									//small displacement added along normal to avoid self-intersection
 									toLight.pos += normal * RAY_EPSILON
 
 									//Light only contributes if it faces the object								
-									if(glm::dot(toLight.dir, light.areaShape->getNormal()))
+									if(glm::dot(-toLight.dir, light.areaShape->getNormal()))
 									{
 										//Intersection point must also have a normal facing the light
 										//if there is an object between the intersection and point on light, the point is in shadow
@@ -475,31 +487,35 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 										if(dot > 0 && !hitsObject(toLight))
 										{
 											inShadow = false;
-											numHits++;
-
-											float lightRadius = glm::length(toLight.dir);
-											toLight.dir = glm::normalize(toLight.dir);
-											averageShadowDir += toLight.dir;
-											//lightFalloffIntensity += (light.intensity * dot) / (4.0f * _PI_ * lightRadius);	
-											lightFalloffIntensity += (light.intensity) / (std::powf(lightRadius, 1.0f));
+											lightVisibility++;
 										}
 									}
 								}
 							}
-							lightFalloffIntensity /= float(scene->SHADOW_SAMPLES);
-							shadowRay.dir = averageShadowDir / float(numHits);
+							shadowRay.dir = light.pos - shadowRay.pos;
+							float lightRadius = glm::length(shadowRay.dir);
+							shadowRay.dir = glm::normalize(shadowRay.dir);
+							lightFalloffIntensity = (light.intensity) / (std::powf(lightRadius, 1.0f));
+							lightVisibility /= scene->SHADOW_SAMPLES;
 						} 
 						else 
 						{
 							shadowRay.dir = light.pos - shadowRay.pos;
 							float lightRadius = glm::length(shadowRay.dir);
 							shadowRay.dir = glm::normalize(shadowRay.dir);
-							lightFalloffIntensity = (light.intensity) / (4 * _PI_ * lightRadius);
+							Ray temp = shadowRay;
+							temp.pos += normal * RAY_EPSILON;
+							if(!hitsObject(temp) && glm::dot(normal, shadowRay.dir) > 0.0f)
+							{
+								inShadow = false;
+								lightFalloffIntensity = (light.intensity) / (4 * _PI_ * lightRadius);
+							}
 						}
 						break;
 					}
 					case Light::DIRECTIONAL:
 					{
+						lightVisibility = 1.0f;
 						shadowRay.dir = -light.dir;
 						shadowRay.dir = glm::normalize(shadowRay.dir);
 						lightFalloffIntensity = (light.intensity);
@@ -513,7 +529,12 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 					const Material& material = ray.hitObject->getMaterial();
 					if(material.type & Material::DIFFUSE)
 					{
-						finalCol += glm::dot(normal, shadowRay.dir) * ray.hitObject->getMaterial().sample(ray, ray.thit0);
+						//lightVisibilty: represents how in shadow a point is (1 = completly out of shadow, 0 = completely occluded)
+						//dot product gives cosine of angle between the vectors
+						//sample() gives the diffuse color of the point
+						//dot product must be positive or else the light has no influence
+						if(glm::dot(normal, shadowRay.dir) > 0.0f)
+							finalCol += lightVisibility * glm::dot(normal, shadowRay.dir) * ray.hitObject->getMaterial().sample(ray, ray.thit0);
 					}
 
 					if(material.type & Material::BPHONG_SPECULAR)
@@ -524,9 +545,11 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 						glm::vec3 view = glm::normalize(camera.position - shadowRay.pos);
 						//bisector ray calculation
 						glm::vec3 bisector = glm::normalize(view + shadowRay.dir);
-
-						finalCol += material.specularColor * material.specCoef
-							* std::powf(glm::dot(normal, bisector), material.shininess);
+						if(glm::dot(normal, bisector) > 0.0f)
+						{
+							finalCol += material.specularColor * material.specCoef
+								* std::powf(glm::dot(normal, bisector), material.shininess);
+						}
 					}
 					if(material.type & Material::REFRACTIVE)
 					{

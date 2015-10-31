@@ -21,8 +21,8 @@ glm::vec3 Triangle::calcObjectNormal() const
 glm::vec3 Triangle::calcWorldIntersectionNormal(glm::vec3) const
 {
 	std::array<glm::vec3, 3> p = getWorldCoords();
-	glm::vec3 n = glm::normalize(glm::cross(p[1] - p[0], p[2] - p[0]));
-	return n;
+	glm::vec3 normal = glm::normalize(glm::cross(p[1] - p[0], p[2] - p[0]));
+	return normal;
 }
 
 std::array<glm::vec3, 3> Triangle::getWorldCoords() const

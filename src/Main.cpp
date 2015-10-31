@@ -37,15 +37,15 @@ void main(char** args)
 	//scene.addObject(std::move(cube));
 
 	//create sphere shape
-	Sphere sphereShape = Sphere(glm::vec3(0, 0.5, -6), 0.8f);
+	Sphere sphereShape = Sphere(glm::vec3(0, 0.5, -7), 0.8f);
 
 	//create sphere's material
 	Material sphereMat = Material();
 	sphereMat.color = glm::vec3(200, 0, 0);
-	sphereMat.specCoef = 0.8f;
+	sphereMat.specCoef = 0.4f;
 	sphereMat.shininess = 100.0f;
 	sphereMat.indexOfRefrac = 1.2f;
-	sphereMat.type = Material::DIFFUSE;
+	sphereMat.type = Material::DIFFUSE | Material::BPHONG_SPECULAR;
 
 	//create sphere object that holds shape and material
 	std::unique_ptr<GeometryObj> sphere = std::make_unique<GeometryObj>(&sphereShape, 
@@ -66,7 +66,7 @@ void main(char** args)
 		sphereMat1);
 	//scene.addObject(std::move(sphere1));
 
-	Sphere sphereShape2 = Sphere(glm::vec3(-1.5, 0, -9), 1);
+	Sphere sphereShape2 = Sphere(glm::vec3(-1.5, 0.25, -9), 0.8f);
 	Material sphereMat2 = Material();
 	sphereMat2.color = glm::vec3(0, 0, 200);
 	sphereMat2.specCoef = 0.8f;
@@ -77,10 +77,13 @@ void main(char** args)
 	//scene.addObject(std::move(sphere2));
 
 
-	/*TriObject* dragon = new TriObject(glm::vec3(0, 0.0f, -5));
-	Material dragonMat = Material(glm::vec3(200, 0, 0), 1.0f, 0.1f, 100.0f);
-	dragonMat.type = Material::DIFFUSE | Material::BPHONG_SPECULAR;
-	if(dragon->loadOBJ("./docs/models/monkey.obj"))
+	/*TriObject* dragon = new TriObject(glm::vec3(1, 0.5f, -6));
+	Material dragonMat = Material();
+	dragonMat.color = glm::vec3(200, 0, 0);
+	dragonMat.specCoef = 0.1f;
+	dragonMat.shininess = 100.0f;
+	dragonMat.type = Material::DIFFUSE;
+	if(dragon->loadOBJ("./docs/models/box.obj"))
 	{
 		dragon->initAccelStruct();
 		scene.addObject(std::make_unique<GeometryObj>(dragon, dragonMat));
@@ -99,10 +102,11 @@ void main(char** args)
 		renderer.addObject(std::move(o));
 	}*/
 	Light light;
-	light.pos = glm::vec3(-4.0f, 5.0f, 0.0f);
+	light.type = Light::POINT;
+	light.pos = glm::vec3(-3.0f, 5.0f, -4.0f);
 	light.color = glm::vec3(255, 197, 143);
-	light.intensity = 10.0f;
-	Plane lightPlane = Plane(light.pos, degToRad(130.0f), degToRad(0.0f), 0.0f, glm::vec2(10.0f, 10.0f));
+	light.intensity = 6.0f;
+	Plane lightPlane = Plane(light.pos, degToRad(150.0f), degToRad(-30.0f), 0.0f, glm::vec2(5.0f, 5.0f));
 	light.createShape(lightPlane);
 	light.isAreaLight = true;
 	scene.addLight(light);	
