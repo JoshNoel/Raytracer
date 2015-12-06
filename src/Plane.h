@@ -25,7 +25,7 @@ public:
 
 	SHAPE_TYPE getType() const override{ return SHAPE_TYPE::PLANE; }
 	bool intersects(Ray& ray, float& thit0, float& thit1) const override;
-	glm::vec3 calcWorldIntersectionNormal(glm::vec3) const override;
+	glm::vec3 calcWorldIntersectionNormal(const Ray& ray) const override;
 
 	void setProperties(float xAngle, float yAngle, float zAngle, glm::vec2 dimensions);
 	glm::vec2 getDimensions() const;
@@ -34,9 +34,16 @@ public:
 	glm::vec3 getV() const { return vVec; }
 
 private:
-	glm::vec3 dimensions;
+	//x = width
+	//	distance along uVec
+	//y = length
+	//	distance along vVec
+	glm::vec2 dimensions;
 	glm::vec3 normal;
+
+	//represents normalized "x-axis", of plane's coordinate system
 	glm::vec3 uVec;
+	//represents normalized "y-axis", of plane's coordinate system
 	glm::vec3 vVec;
 };
 

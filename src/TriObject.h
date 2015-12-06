@@ -19,11 +19,15 @@ public:
 	std::vector<Triangle*> tris;
 	Node* root;
 	
-	mutable Triangle* collisionTri;
-
 	//returns if ray intersects with bounding box 
 	bool intersects(Ray& ray, float& thit0, float& thit1) const override;
-	glm::vec3 calcWorldIntersectionNormal(glm::vec3) const override;
+	glm::vec3 calcWorldIntersectionNormal(const Ray& ray) const override;
+
+	void flipNormals(bool flip)
+	{
+		this->invertNormals = flip;
+	}
+
 
 protected:
 	SHAPE_TYPE getType() const override{ return SHAPE_TYPE::TRIANGLE_MESH; };
@@ -33,4 +37,6 @@ private:
 
 	bool checkTris(const std::vector<Triangle*>* tris, Ray& ray, float& thit0, float& thit1) const;
 	bool checkNode(Node* node, Ray& ray, float& thit0, float& thit1) const;
+
+	bool invertNormals;
 };

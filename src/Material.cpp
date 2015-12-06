@@ -1,9 +1,12 @@
 #include "Material.h"
 #include "Ray.h"
+#include "Triangle.h"
+#include "MathHelper.h"
+#include <array>
 
 Material::Material(glm::vec3 col, float dc, glm::vec3 specCol, float sc, float shine, float ref, float ior)
 	: color(col), diffuseCoef(dc), indexOfRefrac(ior), specCoef(sc),
-	specularColor(specCol), shininess(shine), reflectivity(ref)
+	specularColor(specCol), shininess(shine), reflectivity(ref), texture()
 {
 }
 
@@ -12,9 +15,63 @@ Material::~Material()
 {
 }
 
-glm::vec3 Material::sample(const Ray& ray, float t)
+glm::vec3 Material::sample(const Ray& ray, float t) const
 {
-	return color;
+	if(!hasTexture)
+		return color;
+
+	//sample texture
+	//first compute coefficients for weighted average of uvCoords at 3 triangle points for the intersection point
+	//I = intersection
+	glm::vec3 I = ray.pos + ray.dir * t;
+	std::array<glm::vec2, 3> triCoords;
+	if(!ray.hitTri->getUV(triCoords))
+		return color;
+	
+	/*					    p3
+							/\
+						   /  \
+						  /	   \
+						 /	    \
+						/	 	 \
+					   /		  \
+					  /		•	   \
+					 /	    	    \
+					/			     \
+				   /__________________\
+				  p1				  p2
+	
+	
+	*/
+
+	//if lines are drawn from each vertex to the intersection point,
+	//	the ratio of the uvCoordinate of each point contributed to the intersection 
+	//	is equal to the ratio of the are of the opposite inner triangle to the area of the whole triangle
+	glm::vec3 p1 = ray.hitTri->getWorldCoords()[0];
+	glm::vec3 p2 = ray.hitTri->getWorldCoords()[1];
+	glm::vec3 p3 = ray.hitTri->getWorldCoords()[2];
+
+	//areas are doubled, but the ratio of the sub-triangle areas to the whole triangle is all that matters
+	glm::vec3 totalAreaVec = glm::cross(p2 - p1, p3 - p1);
+	float totalArea = glm::length(totalAreaVec);
+	glm::vec3 ItoP1 = p1 - I;
+	glm::vec3 ItoP2 = p2 - I;
+	glm::vec3 ItoP3 = p3 - I;
+	
+	float p1Area = glm::length(glm::cross(ItoP2, ItoP3));
+	float p2Area = glm::length(glm::cross(ItoP3, ItoP1));
+	float p3Area = glm::length(glm::cross(ItoP1, ItoP2));
+
+	float p1Weight = p1Area / totalArea;
+	float p2Weight = p2Area / totalArea;
+	float p3Weight = p3Area / totalArea;
+
+	glm::vec2 uv1 = triCoords[0];
+	glm::vec2 uv2 = triCoords[1];
+	glm::vec2 uv3 = triCoords[2];
+
+	glm::vec2 intersectionCoord = uv1 * p1Weight + uv2 * p2Weight + uv3 * p3Weight;
+	return texture.getPixel(intersectionCoord);
 }
 
 float Material::calcReflectivity(float angle, float n1)
@@ -30,6 +87,12 @@ float Material::calcReflectivity(float angle, float n1)
 	float Rp = std::powf(std::fabsf((i2cos - r1cos) / (i2cos + r1cos)), 2.0f);
 
 	return (Rs + Rp) / 2.0f;
+}
+
+void Material::setTexture(const Texture& tex)
+{
+	this->texture = tex;
+	hasTexture = true;
 }
 
 //Initialize constant indicies of refraction

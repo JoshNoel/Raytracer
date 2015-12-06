@@ -23,18 +23,38 @@ class TriObject;
 class Triangle : public Shape
 {
 public:
-	Triangle(const std::array<glm::vec3, 3>& p);
+	Triangle(const std::array<glm::vec3, 3>& p, bool calcNormal);
 	~Triangle();
 	SHAPE_TYPE getType() const override { return SHAPE_TYPE::TRIANGLE; }
 
+	//add uv coordinates to the triangle
+	//	coordinate order matches with vertex order in points array
+	void setUVCoords(const std::array<glm::vec2, 3>&);
 
-	glm::vec3 calcObjectNormal() const;
-	glm::vec3 calcWorldIntersectionNormal(glm::vec3) const override;
+	//returns the precaclulated normal value
+	glm::vec3 calcWorldIntersectionNormal(const Ray&) const override;
+
+	//returns points in world space
 	std::array<glm::vec3, 3> getWorldCoords() const;
+
+	//returns points in object space
+	std::array<glm::vec3, 3> getPoints() const;
+	//returns uvCoordinates
+	bool getUV(std::array<glm::vec2, 3>& coords) const;
+
 	bool intersects(Ray& ray, float& thit0, float& thit1) const override;
 	glm::vec3 getWorldPos() const;
+	
+	glm::vec3 normal;
+
+	bool hasUV = false;
+
+private:
+	//used to compute normal at creation
+	glm::vec3 calcObjectNormal() const;
 
 	std::array<glm::vec3, 3> points;
+	std::array<glm::vec2, 3> uvCoords;
 };
 
 

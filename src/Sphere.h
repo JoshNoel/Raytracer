@@ -51,7 +51,7 @@ public:
 	* t1 will contain position of second intersection
 	*/
 	bool intersects(Ray& ray, float& thit0, float& thit1) const override;
-	glm::vec3 calcWorldIntersectionNormal(glm::vec3 intPos) const override;
+	glm::vec3 calcWorldIntersectionNormal(const Ray& ray) const override;
 
 	float radius;
 };

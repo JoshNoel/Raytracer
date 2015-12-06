@@ -16,11 +16,13 @@ Camera::~Camera()
 {
 }
 
+//Calculates camera properties based on the aspect ratio of the image
 void Camera::calculate(float aspectRatio)
 {
 	up = glm::normalize(up);
 	direction = glm::normalize(direction);
 
+	//convert fov to radians
 	float fovRad = fov*3.1415f / 180.0f;
 
 	float thfov = tan(fovRad / 2);

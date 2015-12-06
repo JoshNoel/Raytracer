@@ -1,6 +1,7 @@
 #pragma once
 #include "glm\glm.hpp"
 #include "Ray.h"
+#include "Texture.h"
 
 class Material
 {
@@ -45,7 +46,7 @@ public:
 	//calculates unpolarized reflectivity of material from Index of Refraction 1(n1) into the material given the angle of incidence
 	// default incoming index of refraction of 1.0f represents air
 	float calcReflectivity(float angleOfIncidence, float n1 = 1.0f);
-	glm::vec3 sample(const Ray& ray, float t);
+	glm::vec3 sample(const Ray& ray, float t) const;
 
 	glm::vec3 color;
 	glm::vec3 specularColor;
@@ -55,5 +56,11 @@ public:
 
 	float shininess;
 	float reflectivity;
+
+	void setTexture(const Texture&);
+
+private:
+	Texture texture;
+	bool hasTexture = false;
 };
 

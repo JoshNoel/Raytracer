@@ -45,12 +45,6 @@ Renderer::~Renderer()
 */
 glm::vec3 refract(glm::vec3 dir, glm::vec3 norm, float ior1, float ior2)
 {
-	/*float ratio = ior1 / ior2;
-	glm::vec3 dirOnNorm = glm::dot(-dir, norm) * norm;
-
-	glm::vec3 refractedVec = -dirOnNorm + (ratio * (dir + dirOnNorm));
-
-	return glm::normalize(refractedVec);*/
 	glm::vec3 dirOnNorm = glm::dot(-dir, norm)*norm;
 
 	//sin(theta1) = |perpToNormal| because hypotonuse (the incident vector) has mag. of 1
@@ -91,10 +85,9 @@ void Renderer::render()
 	if(image == nullptr) return;
 	if(scene->objectList.size() == 0) return;
 
-	//primary.pos(0, 0, camera.focalLength);
 	camera.calculate(image->getAR());
 
-	int imageSegmentLength = std::floorf(image->height / NUM_THREADS);
+	int imageSegmentLength = int(std::floorf(image->height / NUM_THREADS));
 
 	//assign threads vertical sections of image to render
 	std::array<renderThread, NUM_THREADS> threadArray;
@@ -315,7 +308,7 @@ void Renderer::startThread(renderThread* renderThread) const
 				float thit0, thit1;
 				color += glm::min(castRay(primary, thit0, thit1, 0), glm::vec3(255, 255, 255));
 			}
-			renderThread->data[(i-start)*width + j] = color / float(samples);
+			renderThread->data[(i-start)*width + j] = (color / float(samples));
 		}
 	}
 }
@@ -338,9 +331,7 @@ bool Renderer::hitsObject(Ray& ray, float& thit0, float& thit1) const
 			{
 				//if p0 is not minimum, or is behind origin than this intersection is behind another object
 				//in the rays path, or is behind the camera
-				if(p0 > ray.thit0 || p0 < 0)
-					continue;
-				else
+				if(p0 < ray.thit0 && p0 > 0)
 				{
 					ray.thit0 = p0;
 					ray.thit1 = p1;
@@ -362,14 +353,6 @@ bool Renderer::hitsObject(Ray& ray) const
 	return (hit && x > 0);
 }
 
-//returns sign of arg
-//	negative -> return -1
-//	positive -> return 1
-template <typename T> int sign(T num)
-{
-	return (num > 0) - (num < 0);
-}
-
 
 glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) const
 {
@@ -387,11 +370,11 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 		}
 		else
 		{
-			finalCol += scene->ambientColor * scene->ambientIntensity;
+			finalCol = glm::vec3(0,0,0);
 			Ray shadowRay;
 			shadowRay.pos = ray.pos + ray.dir * ray.thit0;
 
-			glm::vec3 normal = ray.hitObject->getShape()->calcWorldIntersectionNormal(shadowRay.pos);
+			glm::vec3 normal = ray.hitObject->getShape()->calcWorldIntersectionNormal(ray);
 			normal = glm::normalize(normal);
 
 			//////////////Calculate transmission and reflection contributions using fresnel's equation///////////////
@@ -420,9 +403,9 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 
 							//In order to create grid scene->SHADOW_SAMPLES must be a perfect square
 							//TODO fast perfect square check
-							for(int sampleX = -std::sqrt(scene->SHADOW_SAMPLES) / 2; sampleX < std::sqrtf(scene->SHADOW_SAMPLES) / 2; sampleX++)
+							for(int sampleX = -std::sqrtf(scene->SHADOW_SAMPLES) / 2; sampleX < std::sqrtf(scene->SHADOW_SAMPLES) / 2; sampleX++)
 							{
-								for(int sampleY = -std::sqrt(scene->SHADOW_SAMPLES) / 2; sampleY < std::sqrtf(scene->SHADOW_SAMPLES) / 2; sampleY++)
+								for(int sampleY = -std::sqrtf(scene->SHADOW_SAMPLES) / 2; sampleY < std::sqrtf(scene->SHADOW_SAMPLES) / 2; sampleY++)
 								{
 									float xPos = distributionX(rng);
 									float yPos = distributionY(rng);
@@ -445,8 +428,8 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 									//center of grid square
 									//	traverse each column
 									glm::vec3 basePos = light.areaShape->position +
-										(light.areaShape->getU() * ((sampleX * gridSquareSideLength) - (sign(sampleX) * gridSquareSideLength / 2.0f))) +
-										(light.areaShape->getV() * ((sampleY * gridSquareSideLength) - (sign(sampleY) * gridSquareSideLength / 2.0f)));
+										(light.areaShape->getU() * ((sampleX * gridSquareSideLength) - (Math::sign(sampleX) * gridSquareSideLength / 2.0f))) +
+										(light.areaShape->getV() * ((sampleY * gridSquareSideLength) - (Math::sign(sampleY) * gridSquareSideLength / 2.0f)));
 
 									//add random vector to center of grid square
 									//	this vector will give a random point within the grid square
@@ -479,7 +462,7 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 									toLight.pos += normal * RAY_EPSILON
 
 									//Light only contributes if it faces the object								
-									if(glm::dot(-toLight.dir, light.areaShape->getNormal()))
+									if(glm::dot(-toLight.dir, light.areaShape->getNormal()) > 0.0f)
 									{
 										//Intersection point must also have a normal facing the light
 										//if there is an object between the intersection and point on light, the point is in shadow
@@ -534,7 +517,7 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 						//sample() gives the diffuse color of the point
 						//dot product must be positive or else the light has no influence
 						if(glm::dot(normal, shadowRay.dir) > 0.0f)
-							finalCol += lightVisibility * glm::dot(normal, shadowRay.dir) * ray.hitObject->getMaterial().sample(ray, ray.thit0);
+							finalCol += glm::dot(normal, shadowRay.dir) * material.sample(ray, ray.thit0);
 					}
 
 					if(material.type & Material::BPHONG_SPECULAR)
@@ -545,10 +528,12 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 						glm::vec3 view = glm::normalize(camera.position - shadowRay.pos);
 						//bisector ray calculation
 						glm::vec3 bisector = glm::normalize(view + shadowRay.dir);
-						if(glm::dot(normal, bisector) > 0.0f)
+						glm::vec3 r = reflect(-shadowRay.dir, normal);
+						float dot = glm::dot(view, r);
+						if(glm::dot(view, r) > 0.0f)
 						{
 							finalCol += material.specularColor * material.specCoef
-								* std::powf(glm::dot(normal, bisector), material.shininess);
+								* std::powf(glm::dot(view, r), material.shininess);
 						}
 					}
 					if(material.type & Material::REFRACTIVE)
@@ -579,10 +564,10 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 						*
 						*/
 
-						if(ray.thit1 > -_INFINITY && ray.hitObject->getMaterial().indexOfRefrac >= 1.0f)
+						if(ray.thit1 > -_INFINITY && material.indexOfRefrac >= 1.0f)
 						{
 							float ior1 = Material::IOR::AIR;
-							float ior2 = ray.hitObject->getMaterial().indexOfRefrac;
+							float ior2 = material.indexOfRefrac;
 
 							Ray innerRay;
 							innerRay.pos = shadowRay.pos;
@@ -610,15 +595,17 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 							float t0, t1;
 							if(ray.hitObject->getShape()->intersects(innerRay, t0, t1))
 							{
+								innerRay.thit0 = t0;
+								innerRay.thit1 = t1;
 								Ray refractionRay;
-								refractionRay.pos = innerRay.pos + innerRay.dir * t0;
-								glm::vec3 norm = ray.hitObject->getShape()->calcWorldIntersectionNormal(refractionRay.pos);
+								refractionRay.pos = innerRay.pos + innerRay.dir * innerRay.thit0;
+								glm::vec3 norm = ray.hitObject->getShape()->calcWorldIntersectionNormal(innerRay);
 								
 								//calculate refraction ray
 								refractionRay.dir = refract(innerRay.dir, -norm, ior2, ior1);
 
 								//refraction ray must be in same direction as intersection normal
-								if(glm::dot(refractionRay.dir, -norm) > 0.0f)
+								if(glm::dot(refractionRay.dir, norm) > 0.0f)
 								{
 									refractionRay.pos += norm * RAY_EPSILON;
 									finalCol += castRay(refractionRay, depth + 1) * transmitRatio;
@@ -626,13 +613,14 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 							}
 
 							Ray reflectionRay;
-							reflectionRay.dir = reflect(ray.dir, normal);
+							reflectionRay.dir = reflect(reflectionRay.pos - ray.pos, normal);
 							reflectionRay.pos = shadowRay.pos;
 							reflectionRay.pos += normal * RAY_EPSILON;
 							finalCol += castRay(reflectionRay, depth + 1) * reflectionRatio;
 						}
 					}
-					finalCol *= lightFalloffIntensity;
+					//Add visibility (how much in shadow the point is) and falloff coefficients to the final color calculation
+					finalCol *= lightVisibility * lightFalloffIntensity;
 				}
 			}
 
@@ -647,10 +635,14 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 				//add bias to avoid self-intersection
 				reflectionRay.pos += normal * RAY_EPSILON;
 
+				//TODO: calculate light lost to absorbtion
 				float thit0, thit1;
-				finalCol += castRay(reflectionRay, thit0, thit1, depth + 1) * ray.hitObject->getMaterial().reflectivity;
+				finalCol += castRay(reflectionRay, thit0, thit1, depth + 1) * (1.0f / (float(depth) + 1.0f)) * ray.hitObject->getMaterial().reflectivity;
 			}	
 		}
+
+		//add ambient light (no point can be completely black to add realism due to indirect lighting effects)
+		finalCol += scene->ambientColor * scene->ambientIntensity;
 	}
 	return finalCol;
 }

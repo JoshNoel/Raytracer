@@ -15,6 +15,7 @@ BoundingBox::~BoundingBox()
 {
 }
 
+//Extends bounds to include bbox
 void BoundingBox::join(const BoundingBox& bbox)
 {
 	//join minBounds

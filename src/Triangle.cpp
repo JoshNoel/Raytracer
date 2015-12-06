@@ -4,24 +4,51 @@
 #include "GeometryObj.h"
 
 
-Triangle::Triangle(const std::array<glm::vec3, 3>& p)
+Triangle::Triangle(const std::array<glm::vec3, 3>& p, bool calcNormal)
 	: points(p), Shape(getWorldPos())
 {
+	if(calcNormal)
+		normal = calcObjectNormal();
+	else
+		normal = glm::vec3(0, 1, 0);
 }
 
 Triangle::~Triangle()
 {
 }
 
+void Triangle::setUVCoords(const std::array<glm::vec2, 3>& uv)
+{
+	uvCoords = uv;
+	hasUV = true;
+}
+
+std::array<glm::vec3, 3> Triangle::getPoints() const
+{
+	return points;
+}
+
+bool Triangle::getUV(std::array<glm::vec2, 3>& coords) const
+{
+	if(hasUV)
+	{
+		coords = this->uvCoords;
+		return true;
+	}
+	else
+	{
+		return false;
+	} 
+}
+
+//used to initialize
 glm::vec3 Triangle::calcObjectNormal() const
 {
 	return glm::normalize(glm::cross(points[1] - points[0], points[2] - points[0]));
 }
 
-glm::vec3 Triangle::calcWorldIntersectionNormal(glm::vec3) const
+glm::vec3 Triangle::calcWorldIntersectionNormal(const Ray& ray) const
 {
-	std::array<glm::vec3, 3> p = getWorldCoords();
-	glm::vec3 normal = glm::normalize(glm::cross(p[1] - p[0], p[2] - p[0]));
 	return normal;
 }
 
@@ -43,7 +70,7 @@ glm::vec3 Triangle::getWorldPos() const
 
 bool Triangle::intersects(Ray& ray, float& thit0, float& thit1) const
 {
-	glm::vec3 normal = calcWorldIntersectionNormal(glm::vec3());
+	glm::vec3 normal = calcWorldIntersectionNormal(Ray());
 	glm::vec3 position = getWorldPos();	 
 	std::array<glm::vec3, 3> points = getWorldCoords();
 
@@ -62,7 +89,10 @@ bool Triangle::intersects(Ray& ray, float& thit0, float& thit1) const
 	//else ray intersects plane of triangle
 
 	float x = glm::dot(normal, ray.pos - position);
-	float t = (-x / y);
+	float t = -(x / y);
+
+	if(t < 0)
+		return false;
 
 	glm::vec3 intersection = ray.pos + ray.dir*t;
 
@@ -74,7 +104,9 @@ bool Triangle::intersects(Ray& ray, float& thit0, float& thit1) const
 			{
 				if(t < thit0)
 				{
-					thit0 = thit1 = t;
+					thit0 = t;
+					if(t > thit1)
+						thit1 = t;
 					return true;
 				}
 			}

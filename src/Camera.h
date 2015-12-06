@@ -8,6 +8,7 @@ public:
 	~Camera();
 
 	glm::vec3 up, direction, right, position;
+	//vertical FOV
 	float fov;
 	float viewDistance;
 	float focalLength;

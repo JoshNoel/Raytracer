@@ -31,15 +31,22 @@ void Plane::setProperties(float xAngle, float yAngle, float zAngle, glm::vec2 di
 	this->vVec = glm::normalize(tempV);
 
 	//seDimensions
-	dimensions = glm::vec3(dims.x, PLANE_DEPTH, dims.y);
-	aabb.minBounds = position - ((uVec + vVec + normal) * (dimensions / 2.0f));
-	aabb.maxBounds = position + ((uVec + vVec + normal) * (dimensions / 2.0f));
-	int gh = 0;
+	dimensions = glm::vec2(dims.x, dims.y);
+
+	//create temporary copies of U and V that are scaled by half dimensions, to get bounds of plane
+	//	also create temp copy of normal in order to represent small depth and avoid errors with bounding box intersection
+	glm::vec2 halfDims = dimensions / 2.0f;
+	glm::vec3 uTemp = uVec * halfDims.x;
+	glm::vec3 vTemp = vVec * halfDims.y;
+	glm::vec3 nTemp = normal * PLANE_DEPTH;
+
+	aabb.minBounds = position - (uTemp + vTemp + nTemp);
+	aabb.maxBounds = position + (uTemp + vTemp + nTemp);
 }
 
 glm::vec2 Plane::getDimensions() const
 {
-	return glm::vec2(dimensions.x, dimensions.z);
+	return dimensions;
 }
 
 bool Plane::intersects(Ray& ray, float& thit0, float& thit1) const
@@ -64,10 +71,16 @@ bool Plane::intersects(Ray& ray, float& thit0, float& thit1) const
 
 		//position of intersection using ray equation
 		glm::vec3 intersection = ray.pos + (ray.dir * temp);
-		if(temp < thit0 &&
-			intersection.x > aabb.minBounds.x && intersection.x < aabb.maxBounds.x && 
-			intersection.y > aabb.minBounds.y && intersection.y < aabb.maxBounds.y &&
-			intersection.z < aabb.minBounds.z && intersection.z > aabb.maxBounds.z)
+
+		//vector from plane position to intersection
+		glm::vec3 toIntersect = intersection - this->position;
+
+		//projection of toIntersect onto U, must have a magnitude less than half dimensions.x
+		glm::vec3 intOnU = glm::dot(glm::normalize(toIntersect), uVec) * uVec;
+		//projection of toIntersect onto V, must have a magnitude less than half dimensions.y
+		glm::vec3 intOnV = glm::dot(glm::normalize(toIntersect), vVec) * vVec;
+
+		if(glm::length(intOnU) < dimensions.x / 2.0f && glm::length(intOnV) < dimensions.y / 2.0f)
 		{
 			thit0 = thit1 = temp;
 			return true;
@@ -76,7 +89,7 @@ bool Plane::intersects(Ray& ray, float& thit0, float& thit1) const
 	return false;
 }
 
-glm::vec3 Plane::calcWorldIntersectionNormal(glm::vec3) const
+glm::vec3 Plane::calcWorldIntersectionNormal(const Ray& ray) const
 {
 	return this->normal;
 }

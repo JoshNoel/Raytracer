@@ -55,4 +55,13 @@ public:
 		return true;
 		
 	}
+
+	//returns sign of arg
+	//	negative -> return -1
+	//	positive -> return 1
+	template <typename T> 
+	inline static int sign(T num)
+	{
+		return (num > 0) - (num < 0);
+	}
 };

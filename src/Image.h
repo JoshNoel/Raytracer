@@ -13,8 +13,6 @@ public:
 
 	inline float getAR(){ return float(width) / height; }
 	void outputPPM(std::string path);
-	void outputPNG(std::string path);
-
-	
+	void outputPNG(std::string path);	
 };
 

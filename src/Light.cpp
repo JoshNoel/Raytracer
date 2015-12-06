@@ -24,8 +24,15 @@ Light::Light(const Light& light)
 	dir = light.dir;
 	castsShadow = light.castsShadow;
 	isAreaLight = light.isAreaLight;
-	areaShape = new Plane;
-	*areaShape = *light.areaShape;
+	if(light.areaShape && light.isAreaLight)
+	{
+		areaShape = new Plane;
+		*areaShape = *light.areaShape;
+	}
+	else
+	{
+		areaShape = nullptr;
+	}
 }
 
 Light& Light::operator=(const Light& light)
@@ -37,8 +44,15 @@ Light& Light::operator=(const Light& light)
 	dir = light.dir;
 	castsShadow = light.castsShadow;
 	isAreaLight = light.isAreaLight;
-	areaShape = new Plane;
-	*areaShape = *light.areaShape;
+	if(light.areaShape && light.isAreaLight)
+	{
+		areaShape = new Plane;
+		*areaShape = *light.areaShape;
+	}
+	else
+	{
+		areaShape = nullptr;
+	}
 
 	return *this;
 }

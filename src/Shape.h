@@ -25,7 +25,7 @@ public:
 	//Use Case: Need to find intersection from inside a cube rather than from outside
 
 	virtual bool intersects(Ray& ray, float& thit0, float& thit1) const = 0;
-	virtual glm::vec3 calcWorldIntersectionNormal(glm::vec3) const = 0;
+	virtual glm::vec3 calcWorldIntersectionNormal(const Ray& ray) const = 0;
 	virtual SHAPE_TYPE getType() const = 0;
 
 	GeometryObj* parent;

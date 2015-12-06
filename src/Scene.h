@@ -41,8 +41,8 @@ public:
 	int idCounter = 0;
 
 	const int MAX_RECURSION_DEPTH = 1;
-	const int SHADOW_SAMPLES = 64;
-	const int PRIMARY_SAMPLES = 4;
+	const int SHADOW_SAMPLES = 16;
+	const int PRIMARY_SAMPLES = 1;
 private:
 	BoundingBox sceneBox;
 };

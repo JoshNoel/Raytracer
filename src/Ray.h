@@ -2,6 +2,7 @@
 #include "glm\glm.hpp"
 
 class GeometryObj;
+class Triangle;
 class Ray
 {
 	/*
@@ -20,5 +21,6 @@ public:
 	float thit1;
 
 	GeometryObj* hitObject;
+	Triangle* hitTri;
 };
 
