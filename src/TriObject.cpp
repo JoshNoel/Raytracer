@@ -5,6 +5,21 @@
 #include "MathHelper.h"
 #include "BoundingBox.h"
 
+
+TriObject::TriObject()
+	: Shape(glm::vec3(0,0,0))
+{
+}
+
+TriObject::TriObject(glm::vec3 pos)
+	: Shape(pos)
+{
+}
+
+TriObject::~TriObject()
+{
+}
+
 bool TriObject::checkTris(const std::vector<Triangle*>* tris, Ray& ray, float& thit0, float& thit1) const
 {
 	//iterate vertices
@@ -50,16 +65,6 @@ bool TriObject::checkNode(Node* node, Ray& ray, float& thit0, float& thit1) cons
 	return false;
 }
 
-
-TriObject::TriObject(glm::vec3 pos)
-	: Shape(pos)
-{
-}
-
-TriObject::~TriObject()
-{
-}
-
 void TriObject::initAccelStruct()
 {
 	root = new Node();
@@ -79,6 +84,13 @@ glm::vec3 TriObject::calcWorldIntersectionNormal(const Ray& ray) const
 
 bool TriObject::loadOBJ(std::string path)
 {
+	int x, y;
+	x = y = 0;
+	return loadOBJ(path, 0, std::string(), x, y);
+}
+
+bool TriObject::loadOBJ(std::string path, int startLine, std::string& materialName, int& vertexNum, int& uvNum)
+{
 	bool hasUV = false;
 
 	int extStart = path.find_last_of('.');
@@ -94,8 +106,32 @@ bool TriObject::loadOBJ(std::string path)
 
 	std::vector<glm::vec3> vertices;
 	std::vector<glm::vec2> uvCoords;
+
+	int vertexOffset = vertexNum;
+	vertexNum = 0;
+	int uvOffset = uvNum;
+	uvNum = 0;
+
+	//get rid of lines at beginning of file from stream
+	//so import only considers data after its start line
+	if(startLine != 0)
+	{
+		for(int i = 0; i < startLine; ++i)
+		{
+			getline(ifs, line);
+		}
+	}
+
 	while(getline(ifs, line))
 	{
+		if(line[0] == 'o')
+			break;
+		if(line.find("usemtl") != std::string::npos)
+		{
+			int spacePos = line.find_first_of(' ');
+			materialName = line.substr(spacePos + 1);
+		}
+
 		if(line[0] == 'v' && line[1] != 'n' && line[1] != 't')
 		{
 			int spacePos = line.find_first_of(' ');
@@ -139,29 +175,29 @@ bool TriObject::loadOBJ(std::string path)
 			int spacePos = line.find_first_of(' ');
 			int slashPos = line.find('/', spacePos + 1);
 			//find vertex at the index given in the file ( vertices stored in vertex array)
-			points[0] = (vertices.at(std::stoi(line.substr(spacePos+1, slashPos))-1));
+			points[0] = (vertices.at(std::stoi(line.substr(spacePos + 1, slashPos)) - 1 - vertexOffset));
 
 			spacePos = line.find(' ', spacePos + 1);
 			slashPos = line.find('/', slashPos + 1);
-			points[1] = (vertices.at(std::stoi(line.substr(spacePos+1, slashPos))-1));
+			points[1] = (vertices.at(std::stoi(line.substr(spacePos + 1, slashPos)) - 1 - vertexOffset));
 
 			spacePos = line.find(' ', spacePos + 1);
 			slashPos = line.find('/', slashPos + 1);
-			points[2] = (vertices.at(std::stoi(line.substr(spacePos+1, slashPos))-1));
+			points[2] = (vertices.at(std::stoi(line.substr(spacePos + 1, slashPos)) - 1 - vertexOffset));
 
 			//import uv coordinate order
 			slashPos = line.find_first_of('/');
 			spacePos = line.find(' ', slashPos + 1);
 			//find vertex at the index given in the file ( vertices stored in vertex array)
-			points_uv[0] = (uvCoords.at(std::stoi(line.substr(slashPos + 1, spacePos)) - 1));
+			points_uv[0] = (uvCoords.at(std::stoi(line.substr(slashPos + 1, spacePos)) - 1 - uvOffset));
 
 			spacePos = line.find(' ', spacePos + 1);
 			slashPos = line.find('/', slashPos + 1);
-			points_uv[1] = (uvCoords.at(std::stoi(line.substr(slashPos + 1, spacePos)) - 1));
+			points_uv[1] = (uvCoords.at(std::stoi(line.substr(slashPos + 1, spacePos)) - 1 - uvOffset));
 
 			spacePos = line.find(' ', spacePos + 1);
 			slashPos = line.find('/', slashPos + 1);
-			points_uv[2] = (uvCoords.at(std::stoi(line.substr(slashPos + 1, spacePos)) - 1));
+			points_uv[2] = (uvCoords.at(std::stoi(line.substr(slashPos + 1, spacePos)) - 1 - uvOffset));
 			//end import uv coordinate order
 
 			BoundingBox bbox;
@@ -199,6 +235,9 @@ bool TriObject::loadOBJ(std::string path)
 			tris.back()->position = this->position;
 		}
 	}
+
+	vertexNum = vertexOffset + vertices.size();
+	uvNum = uvOffset + uvCoords.size();
 
 	//set up object bounding box
 	aabb = tris[0]->aabb;

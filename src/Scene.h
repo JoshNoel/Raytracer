@@ -42,7 +42,7 @@ public:
 
 	const int MAX_RECURSION_DEPTH = 1;
 	const int SHADOW_SAMPLES = 16;
-	const int PRIMARY_SAMPLES = 1;
+	const int PRIMARY_SAMPLES = 4;
 private:
 	BoundingBox sceneBox;
 };

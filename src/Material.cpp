@@ -3,6 +3,7 @@
 #include "Triangle.h"
 #include "MathHelper.h"
 #include <array>
+#include <fstream>
 
 Material::Material(glm::vec3 col, float dc, glm::vec3 specCol, float sc, float shine, float ref, float ior)
 	: color(col), diffuseCoef(dc), indexOfRefrac(ior), specCoef(sc),
@@ -14,6 +15,82 @@ Material::Material(glm::vec3 col, float dc, glm::vec3 specCol, float sc, float s
 Material::~Material()
 {
 }
+
+bool Material::loadMTL(const std::string& path, const std::string& materialName)
+{
+	int extStart = path.find_last_of('.');
+	if(path.substr(extStart) != ".mtl")
+		return false;
+
+	std::string line;
+
+	std::ifstream ifs;
+	ifs.open(path);
+	if(!ifs.is_open())
+		return false;
+
+	//clear file stream until it reaches the correct material name
+	//	indicates start of material data
+	while(getline(ifs, line))
+	{
+		if(line.find("newmtl") != std::string::npos && line.find(materialName) != std::string::npos)
+			break;
+	}
+
+	while(getline(ifs, line))
+	{
+		if(line.find("map_Kd") != std::string::npos)
+		{
+			int spacePos = line.find_first_of(' ');
+			std::string texturePath = line.substr(spacePos + 1);
+			texture.loadImage(texturePath);
+		}
+		else if(line.find("Ns") != std::string::npos)
+		{
+			int spacePos = line.find_first_of(' ');
+			shininess = std::stof(line.substr(spacePos + 1));
+		}
+		else if(line.find("Ni") != std::string::npos)
+		{
+			int spacePos = line.find_first_of(' ');
+			indexOfRefrac = std::stof(line.substr(spacePos + 1));
+		}
+		else if(line.find("Kd") != std::string::npos)
+		{
+			//convert from normalized colors to [0, 255] scale
+			int spacePos = line.find_first_of(' ');
+			float r = std::stof(line.substr(spacePos + 1)) * 255.0f;
+
+			spacePos = line.find_first_of(' ');
+			float g = std::stof(line.substr(spacePos + 1)) * 255.0f;
+
+			spacePos = line.find_first_of(' ');
+			float b = std::stof(line.substr(spacePos + 1)) * 255.0f;
+
+			color = glm::vec3(r, g, b);
+		}
+		else if(line.find("Ks") != std::string::npos)
+		{
+			int spacePos = line.find_first_of(' ');
+			float r = std::stof(line.substr(spacePos + 1)) * 255.0f;
+
+			spacePos = line.find_first_of(' ');
+			float g = std::stof(line.substr(spacePos + 1)) * 255.0f;
+
+			spacePos = line.find_first_of(' ');
+			float b = std::stof(line.substr(spacePos + 1)) * 255.0f;
+
+			specularColor = glm::vec3(r, g, b);
+		}
+	}
+
+	if(ifs.bad())
+		return false;
+
+	ifs.close();
+	return true;
+}
+
 
 glm::vec3 Material::sample(const Ray& ray, float t) const
 {

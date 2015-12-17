@@ -8,17 +8,19 @@
 class GeometryObj
 {
 public:
-	GeometryObj(Shape* s, const Material& mat);
+	GeometryObj(std::shared_ptr<Shape> s,  const Material& mat);
 	~GeometryObj();
 
 	inline Material& getMaterial() { return material; }
-	inline Shape* getShape() const { return shape;  }
+	inline std::shared_ptr<Shape> getShape() const { return shape;  }
+
+	static bool loadOBJ(const std::string& path, std::vector<std::unique_ptr<GeometryObj>>* objects, const glm::vec3& position);
 
 	int id = -1;
 
 protected:
 
 	Material material;
-	Shape* shape;
+	std::shared_ptr<Shape> shape;
 };
 

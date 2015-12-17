@@ -47,6 +47,7 @@ public:
 	// default incoming index of refraction of 1.0f represents air
 	float calcReflectivity(float angleOfIncidence, float n1 = 1.0f);
 	glm::vec3 sample(const Ray& ray, float t) const;
+	bool loadMTL(const std::string& path, const std::string& materialName);
 
 	glm::vec3 color;
 	glm::vec3 specularColor;
