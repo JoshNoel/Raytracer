@@ -10,6 +10,8 @@ public:
 	Texture();
 	~Texture();
 
+	//Path should not have extra slashes as escape characters
+	//	needs '\' not '\\'
 	bool loadImage(const std::string& path);
 
 	//uvCoord stores normalized coordinates

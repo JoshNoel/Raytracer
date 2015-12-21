@@ -47,5 +47,8 @@ const glm::vec3 Texture::getPixel(const glm::vec2& uvCoord) const
 	//transform normalized uvCoordinates to xy coordinates on image
 	int x = int(std::floor(uvCoord.x * image.width));
 	int y = int(std::floor(uvCoord.y * image.height));
-	return image.data[x * image.width + y];
+	glm::vec3 vec =  image.data[y *image.height + x];
+
+	return vec;
 }
+ 

@@ -9,6 +9,7 @@ public:
 	~Image();
 
 	int width, height;
+	long numPixels;
 	glm::vec3* data;
 
 	inline float getAR(){ return float(width) / height; }

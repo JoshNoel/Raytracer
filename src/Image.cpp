@@ -5,6 +5,7 @@
 Image::Image(int w, int h)
 	: width(w), height(h)
 {
+	numPixels = w * h;
 	data = new glm::vec3[height * width];
 	for(unsigned i = 0; i < width*height; ++i)
 	{

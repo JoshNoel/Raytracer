@@ -11,7 +11,7 @@
 #include <random>
 #include <thread>
 #include <mutex>
-
+#include <atomic>
 
 class Renderer
 {
@@ -58,6 +58,8 @@ private:
 
 	static const float SHADOW_RAY_LENGTH;
 	static const int NUM_THREADS;
+
+	mutable std::atomic<int> pixelsRendered;
 
 };
 

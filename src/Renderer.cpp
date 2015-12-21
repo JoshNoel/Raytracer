@@ -13,7 +13,7 @@ const int Renderer::NUM_THREADS = 10;
 
 Renderer::Renderer(const Scene* s, Image* i)
 	:image(i), camera(), scene(s), distributionX(0, std::nextafterf(1.0f, FLT_MAX)),
-	distributionY(0, std::nextafterf(1.0f, FLT_MAX)), mutex()
+	distributionY(0, std::nextafterf(1.0f, FLT_MAX)), mutex(), pixelsRendered(0)
 {
 	//initialize rng
 	std::random_device device;
@@ -309,6 +309,12 @@ void Renderer::startThread(renderThread* renderThread) const
 				color += glm::min(castRay(primary, thit0, thit1, 0), glm::vec3(255, 255, 255));
 			}
 			renderThread->data[(i-start)*width + j] = (color / float(samples));
+			/*pixelsRendered++;
+			if(pixelsRendered % (image->numPixels / 10) == 0)
+			{
+				std::cout << "Pixels Rendered: " << pixelsRendered << " / " << image->numPixels << std::endl;
+				//std::cout << (float(image->numPixels) / float(pixelsRendered.load())) * 100.0f << "% Completed" << std::endl;
+			}*/
 		}
 	}
 }
@@ -348,8 +354,8 @@ bool Renderer::hitsObject(Ray& ray, float& thit0, float& thit1) const
 bool Renderer::hitsObject(Ray& ray) const
 {
 	float x, y;
-	bool hit = false;
-	hit = hitsObject(ray, x, y);
+	x = y = 0.0f;
+	bool hit = hitsObject(ray, x, y);
 	return (hit && x > 0);
 }
 
@@ -380,7 +386,7 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 			//////////////Calculate transmission and reflection contributions using fresnel's equation///////////////
 			for(auto light : scene->lightList)
 			{
-				bool inShadow = true;
+				bool inShadow = false;
 
 				//////Check if in shadow/////
 				if(light.intensity < 0.0f)
@@ -437,20 +443,6 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 									randVec = ((gridSquareSideLength / 2.0f) * xPos * light.areaShape->getU()) +
 										((gridSquareSideLength / 2.0f) * yPos * light.areaShape->getV());
 									glm::vec3 randPosOnPlane = basePos + randVec;
-									/*for(int sample = 0; sample < scene->SHADOW_SAMPLES; sample++)
-									{
-										float xPos = distributionX(rng);
-										float yPos = distributionY(rng);
-										//center of grid square
-										//	traverse each column
-										glm::vec3 basePos = light.areaShape->position;
-
-										//add random vector to center of grid square
-										//	this vector will give a random point within the grid square
-										glm::vec3 randVec;
-										randVec = (halfX * xPos * light.areaShape->getU()) +
-											(halfY * yPos * light.areaShape->getV());
-										glm::vec3 randPosOnPlane = basePos + randVec;*/
 
 									Ray toLight;
 									//Ray starts at intersection point
@@ -466,8 +458,7 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 									{
 										//Intersection point must also have a normal facing the light
 										//if there is an object between the intersection and point on light, the point is in shadow
-										float dot = glm::dot(normal, toLight.dir);
-										if(dot > 0 && !hitsObject(toLight))
+										if(glm::dot(normal, toLight.dir) > 0.0f && !hitsObject(toLight))
 										{
 											inShadow = false;
 											lightVisibility++;
@@ -517,7 +508,7 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 						//sample() gives the diffuse color of the point
 						//dot product must be positive or else the light has no influence
 						if(glm::dot(normal, shadowRay.dir) > 0.0f)
-							finalCol += glm::dot(normal, shadowRay.dir) * material.sample(ray, ray.thit0);
+							finalCol += glm::dot(normal, shadowRay.dir) * material.sample(ray, ray.thit0) * material.diffuseCoef;
 					}
 
 					if(material.type & Material::BPHONG_SPECULAR)
@@ -635,7 +626,7 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 				//add bias to avoid self-intersection
 				reflectionRay.pos += normal * RAY_EPSILON;
 
-				//TODO: calculate light lost to absorbtion
+				//TODO: calculate light lost as reflection depth increases
 				float thit0, thit1;
 				finalCol += castRay(reflectionRay, thit0, thit1, depth + 1) * (1.0f / (float(depth) + 1.0f)) * ray.hitObject->getMaterial().reflectivity;
 			}	

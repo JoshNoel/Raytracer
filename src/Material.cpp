@@ -43,7 +43,8 @@ bool Material::loadMTL(const std::string& path, const std::string& materialName)
 		{
 			int spacePos = line.find_first_of(' ');
 			std::string texturePath = line.substr(spacePos + 1);
-			texture.loadImage(texturePath);
+			if(texture.loadImage(texturePath))
+				hasTexture = true;
 		}
 		else if(line.find("Ns") != std::string::npos)
 		{
@@ -61,10 +62,10 @@ bool Material::loadMTL(const std::string& path, const std::string& materialName)
 			int spacePos = line.find_first_of(' ');
 			float r = std::stof(line.substr(spacePos + 1)) * 255.0f;
 
-			spacePos = line.find_first_of(' ');
+			spacePos = line.find(' ', spacePos + 1);
 			float g = std::stof(line.substr(spacePos + 1)) * 255.0f;
 
-			spacePos = line.find_first_of(' ');
+			spacePos = line.find(' ', spacePos + 1);
 			float b = std::stof(line.substr(spacePos + 1)) * 255.0f;
 
 			color = glm::vec3(r, g, b);
@@ -74,10 +75,10 @@ bool Material::loadMTL(const std::string& path, const std::string& materialName)
 			int spacePos = line.find_first_of(' ');
 			float r = std::stof(line.substr(spacePos + 1)) * 255.0f;
 
-			spacePos = line.find_first_of(' ');
+			spacePos = line.find(' ', spacePos + 1);
 			float g = std::stof(line.substr(spacePos + 1)) * 255.0f;
 
-			spacePos = line.find_first_of(' ');
+			spacePos = line.find(' ', spacePos + 1);
 			float b = std::stof(line.substr(spacePos + 1)) * 255.0f;
 
 			specularColor = glm::vec3(r, g, b);

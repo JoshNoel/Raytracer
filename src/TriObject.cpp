@@ -82,7 +82,7 @@ glm::vec3 TriObject::calcWorldIntersectionNormal(const Ray& ray) const
 	return invertNormals ? -norm : norm;
 }
 
-bool TriObject::loadOBJ(std::string path)
+bool TriObject::loadOBJ(const std::string& path)
 {
 	int x, y;
 	x = y = 0;

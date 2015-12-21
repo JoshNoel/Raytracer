@@ -1,3 +1,5 @@
+//==========================================Main.Cpp===============================================//
+
 #include "Renderer.h"
 #include "Plane.h"
 #include "Sphere.h"
@@ -13,7 +15,7 @@ void main(char** args)
 	scene.bgColor = glm::vec3(10, 10, 10);
 
 	//create plane shape (ground)
-	Plane planeShape = Plane(glm::vec3(0, -1.8, -12), 0, 0, 0, glm::vec2(13,13));
+	//Plane planeShape = Plane(glm::vec3(0, -1.8, -12), 0, 0, 0, glm::vec2(13,13));
 
 	//create plane's material
 	Material planeMat = Material();
@@ -75,15 +77,21 @@ void main(char** args)
 	dragonMat.specCoef = 0.1f;
 	dragonMat.shininess = 100.0f;
 	dragonMat.reflectivity = 0.8f;
-	dragonMat.type = Material::DIFFUSE | Material::BPHONG_SPECULAR;
+	dragonMat.type = Material::DIFFUSE;
 	//dragonMat.setTexture(texture);
 	
 	std::vector<std::unique_ptr<GeometryObj>> objectList;
-
-	if(GeometryObj::loadOBJ("./docs/models/2box.obj", &objectList, glm::vec3(0, 0, -15)))
+	bool flipNormals = false;
+	if(GeometryObj::loadOBJ("./docs/models/scene.obj", &objectList, glm::vec3(0, -1.5, -3), flipNormals))
 	{
 		for(int i = 0; i < objectList.size(); ++i)
 		{
+			if(objectList[i]->name == "pedastal")
+			{
+				objectList[i]->getMaterial().type = Material::DIFFUSE | Material::MIRROR;
+				objectList[i]->getMaterial().diffuseCoef = 0.05f;
+				objectList[i]->getMaterial().reflectivity = 0.8f;
+			}
 			scene.addObject(objectList[i]);
 		}
 	}
@@ -95,7 +103,7 @@ void main(char** args)
 	light.pos = glm::vec3(0, 1, -1);
 	light.color = glm::vec3(255, 197, 143);
 	light.intensity = 6.0f;
-	Plane lightPlane = Plane(light.pos, degToRad(200.0f), degToRad(-30.0f), 0.0f, glm::vec2(5.0f, 5.0f));
+	Plane lightPlane = Plane(light.pos, degToRad(-90.0f), degToRad(0.0f), 0.0f, glm::vec2(5.0f, 5.0f));
 	light.createShape(lightPlane);
 	light.isAreaLight = true;
 	scene.addLight(light);	
@@ -110,7 +118,7 @@ void main(char** args)
 
 	Renderer renderer(&scene, &image);
 
-	scene.setAmbient(glm::vec3(255, 255, 255), 0.01f);
+	scene.setAmbient(glm::vec3(255, 255, 255), .01f);
 
 
 	Logger::startClock();

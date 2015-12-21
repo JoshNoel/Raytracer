@@ -14,7 +14,7 @@ public:
 	TriObject(glm::vec3);
 	~TriObject();
 
-	bool loadOBJ(std::string path);
+	bool loadOBJ(const std::string& path);
 	//startLine: start of object data in .obj file
 	//vertexNum: set to number to offset vertice index by in 'f' lines because obj does not reset vertex indices by object
 	//	on return set to number of vertices in object in order to update offset for next objects
