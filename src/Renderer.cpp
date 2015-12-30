@@ -9,13 +9,13 @@
 
 
 const float Renderer::SHADOW_RAY_LENGTH = 50.0f;
-const int Renderer::NUM_THREADS = 10;
+const int Renderer::NUM_THREADS = 8;
 
 Renderer::Renderer(const Scene* s, Image* i)
 	:image(i), camera(), scene(s), distributionX(0, std::nextafterf(1.0f, FLT_MAX)),
 	distributionY(0, std::nextafterf(1.0f, FLT_MAX)), mutex(), pixelsRendered(0)
 {
-	//initialize rng
+	//initialize random number generator for shadow sampling
 	std::random_device device;
 	rng.seed(device());
 }
@@ -89,7 +89,7 @@ void Renderer::render()
 
 	int imageSegmentLength = int(std::floorf(image->height / NUM_THREADS));
 
-	//assign threads vertical sections of image to render
+	//assign threads vertical sections of image that they will render simultaneously
 	std::array<renderThread, NUM_THREADS> threadArray;
 	if(image->height % NUM_THREADS == 0)
 	{
@@ -118,11 +118,13 @@ void Renderer::render()
 		//start thread
 		threadArray[threadNum].m_thread = std::thread(&Renderer::startThread, this, &threadArray[threadNum]);
 	}
+
 	//join threads so that the main loop waits for rendering to finish
 	for(int threadNum = 0; threadNum < NUM_THREADS; ++threadNum)
 	{
 		threadArray[threadNum].m_thread.join();
 	}
+
 	//copy image data from each thread to the actual image
 	for(int threadNum = 0; threadNum < NUM_THREADS; ++threadNum)
 	{
@@ -132,148 +134,9 @@ void Renderer::render()
 			&threadArray[threadNum].data[height * image->width], 
 			&image->data[start * image->width]);
 	}
-
-	//traverse image columns
-	/*float x, y;
-	x = y = 0;
-	Ray primary;
-
-	glm::vec3 color;
-	for(int i = 0; i < image->height; ++i)
-	{
-
-		//traverse rows
-		for(int j = 0; j < image->width; ++j)
-		{
-			glm::vec3 color;
-			for(int primarySample = 0; primarySample < scene->PRIMARY_SAMPLES; ++primarySample)
-			{
-				//normalize x
-				x = (2.0f * (j + distributionX(rng)) / image->width) - 1.0f;
-				//normalize y
-				y = 1.0f - (2.0f * (i + distributionY(rng)) / image->height);
-
-				//x*right in terms of fov == x in terms of right axis
-				//primary.dir = glm::vec3(float(x)*image->getAR()*tan(camera.fov/2), float(y)*tan(camera.fov/2), -1) - primary.pos;
-				primary.dir = x*camera.right + y*camera.up + camera.direction;
-				primary.dir = glm::normalize(primary.dir);
-
-				//Check collision...generate shadow rays
-				primary.thit0 = camera.viewDistance;
-
-				float thit0, thit1;
-				color += glm::min(castRay(primary, thit0, thit1, 0), glm::vec3(255, 255, 255));
-			}
-			image->data[i*image->width + j] = color / float(scene->PRIMARY_SAMPLES);
-		}
-	}*/
-			//GeometryObj* hitObject = scene->objectList[primary.hitIndex].get();
-				////Create shadow ray at intersection to check if point is in a shadow (there is another object between
-				////the point and a light
-				//Ray shadowRay;
-				//Ray reflectionRay;
-				//reflectionRay.pos = shadowRay.pos = primary.pos + primary.dir * primary.thit;
-				//glm::vec3 finalCol = glm::vec3(0, 0, 0);
-
-				////iterate lights
-				//for(auto light : scene->lightList)
-				//{
-				//	if(light.intensity > 50.0f)
-				//		light.intensity = 50.0f;
-				//	if(light.intensity < 0.0f)
-				//		light.intensity = 0.0f;
-				//	bool inShadow = false;
-				//	glm::vec3 normal = hitObject->getShape()->calcWorldIntersectionNormal(shadowRay.pos);
-				//	normal = glm::normalize(normal);
-				//
-				//	float lightFalloffIntensity;
-				//	switch(light.type)
-				//	{
-				//		case Light::POINT:
-				//		{
-				//			shadowRay.dir = light.pos - shadowRay.pos;
-				//			float lightRadius = glm::length(shadowRay.dir);
-				//			shadowRay.dir = glm::normalize(shadowRay.dir);
-				//			lightFalloffIntensity = (light.intensity) / (4 * _PI_ * lightRadius);
-				//			break;
-				//		}
-				//		case Light::DIRECTIONAL:
-				//		{
-				//			shadowRay.dir = -light.dir;
-				//			shadowRay.dir = glm::normalize(shadowRay.dir);
-				//			lightFalloffIntensity = (light.intensity);
-				//			break;
-				//		}
-				//	}
-
-				//	//Create shadow ray from intersection point to light
-				//	
-				//	//if pointing opposite directions skip light
-				//	if(glm::dot(normal, shadowRay.dir) <= 0)
-				//		continue;
-				//	//check if in shadow
-				//	if(light.castsShadow)
-				//	{
-				//		for(unsigned s2 = 0; s2 < scene->objectList.size(); ++s2)
-				//		{
-				//			if(s2 == primary.hitIndex) continue;
-				//			float temp0, temp1;
-				//			temp0 = SHADOW_RAY_LENGTH;
-				//			temp1 = -SHADOW_RAY_LENGTH;
-				//			if(scene->objectList[s2]->getShape()->intersects(shadowRay, &temp0, &temp1))
-				//			{
-				//				if(temp0 > 0)
-				//					inShadow = true;
-				//			}
-				//		}
-				//	}
-				//	if(!inShadow)
-				//	{
-				//		finalCol += hitObject->getMaterial().color * glm::max(0.0f, glm::dot(normal, shadowRay.dir)) * lightFalloffIntensity;						
-				//	}
-
-				//	//check reflection
-				//	/******REFLECTION RAY********
-				//	*    N
-				//	*	 ^
-				//	*	 |
-				//	*	 |
-				//	*  A Iₙ A	
-				//	*^---^---^
-				//	* \	 |  /
-				//	*  \ϴ|ϴ/
-				//	*  I\|/R
-				//	*	 P
-				//	*
-				//	*R = (2Iₙ - I) - P
-				//	*Iₙ = I•N / |N|
-				//	*R = (2(I•N)/|N| - I) - P
-				//	*/
-
-				//	glm::vec3 eyeToSurface = reflectionRay.pos - primary.pos;
-				//	reflectionRay.dir = glm::normalize(eyeToSurface - (2 * glm::dot(eyeToSurface, normal) * normal));
-
-				//	
-				//	//TODO Specular material props
-				//	for(unsigned s2 = 0; s2 < scene->objectList.size(); ++s2)
-				//	{
-				//		if(s2 == primary.hitIndex) continue;
-				//		float temp0, temp1;
-				//		temp0 = SHADOW_RAY_LENGTH;
-				//		temp1 = -SHADOW_RAY_LENGTH;
-				//		if(scene->objectList[s2]->getShape()->intersects(reflectionRay, &temp0, &temp1))
-				//		{
-				//			if(temp0 > 0)
-				//				finalCol += scene->objectList[s2]->getMaterial().sample(reflectionRay, temp0) * hitObject->getMaterial().specCoef;
-				//		}
-				//	}
-				//}
-				//image->data[i*image->width + j] = glm::min(glm::vec3(255, 255, 255),
-				//	finalCol + scene->ambientColor*scene->ambientIntensity);
-		//}
-	//}
 }
 
+//Runs code for each tread to render its section of the image
 void Renderer::startThread(renderThread* renderThread) const
 {
 	int start = renderThread->start;
@@ -297,8 +160,6 @@ void Renderer::startThread(renderThread* renderThread) const
 				//normalize y
 				y = 1.0f - (2.0f * (i + distributionY(rng)) / image->height);
 
-				//x*right in terms of fov == x in terms of right axis
-				//primary.dir = glm::vec3(float(x)*image->getAR()*tan(camera.fov/2), float(y)*tan(camera.fov/2), -1) - primary.pos;
 				primary.dir = x*camera.right + y*camera.up + camera.direction;
 				primary.dir = glm::normalize(primary.dir);
 
@@ -309,12 +170,6 @@ void Renderer::startThread(renderThread* renderThread) const
 				color += glm::min(castRay(primary, thit0, thit1, 0), glm::vec3(255, 255, 255));
 			}
 			renderThread->data[(i-start)*width + j] = (color / float(samples));
-			/*pixelsRendered++;
-			if(pixelsRendered % (image->numPixels / 10) == 0)
-			{
-				std::cout << "Pixels Rendered: " << pixelsRendered << " / " << image->numPixels << std::endl;
-				//std::cout << (float(image->numPixels) / float(pixelsRendered.load())) * 100.0f << "% Completed" << std::endl;
-			}*/
 		}
 	}
 }
@@ -354,7 +209,8 @@ bool Renderer::hitsObject(Ray& ray, float& thit0, float& thit1) const
 bool Renderer::hitsObject(Ray& ray) const
 {
 	float x, y;
-	x = y = 0.0f;
+	x =  _INFINITY;
+	y = -_INFINITY;
 	bool hit = hitsObject(ray, x, y);
 	return (hit && x > 0);
 }
@@ -383,12 +239,11 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 			glm::vec3 normal = ray.hitObject->getShape()->calcWorldIntersectionNormal(ray);
 			normal = glm::normalize(normal);
 
-			//////////////Calculate transmission and reflection contributions using fresnel's equation///////////////
 			for(auto light : scene->lightList)
 			{
-				bool inShadow = false;
+				bool inShadow = true;
 
-				//////Check if in shadow/////
+				//////Check visibility to light//////
 				if(light.intensity < 0.0f)
 					light.intensity = 0.0f;
 
@@ -398,8 +253,9 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 				{
 					case Light::POINT:
 					{
-						//Monte Carlo Method
-						//Fire rays from point to areaLight, and average results
+						//Monte Carlo Method - repeated random sampling of data approaches true value
+							//Fire rays from intersection point to areaLight, and average results
+								//samples are stratified over the area of the light
 						if(light.isAreaLight && light.areaShape != nullptr)
 						{
 							float halfX = light.areaShape->getDimensions().x / 2.0f;
@@ -408,7 +264,6 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 							std::uniform_real_distribution<float> distributionY(-1.0f, std::nextafterf(1.0f, FLT_MAX));
 
 							//In order to create grid scene->SHADOW_SAMPLES must be a perfect square
-							//TODO fast perfect square check
 							for(int sampleX = -std::sqrtf(scene->SHADOW_SAMPLES) / 2; sampleX < std::sqrtf(scene->SHADOW_SAMPLES) / 2; sampleX++)
 							{
 								for(int sampleY = -std::sqrtf(scene->SHADOW_SAMPLES) / 2; sampleY < std::sqrtf(scene->SHADOW_SAMPLES) / 2; sampleY++)
@@ -433,7 +288,7 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 
 									//center of grid square
 									//	traverse each column
-									glm::vec3 basePos = light.areaShape->position +
+									glm::vec3 basePos = light.areaShape->getPosition() +
 										(light.areaShape->getU() * ((sampleX * gridSquareSideLength) - (Math::sign(sampleX) * gridSquareSideLength / 2.0f))) +
 										(light.areaShape->getV() * ((sampleY * gridSquareSideLength) - (Math::sign(sampleY) * gridSquareSideLength / 2.0f)));
 
@@ -451,8 +306,8 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 									toLight.dir = randPosOnPlane - shadowRay.pos;
 									toLight.dir = glm::normalize(toLight.dir);
 									//small displacement added along normal to avoid self-intersection
-									toLight.pos += normal * RAY_EPSILON
-
+									toLight.pos += normal * RAY_EPSILON;
+							
 									//Light only contributes if it faces the object								
 									if(glm::dot(-toLight.dir, light.areaShape->getNormal()) > 0.0f)
 									{
@@ -466,14 +321,19 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 									}
 								}
 							}
+
+							//calculate final shadow ray for lighting calculations
+							//also calculate light falloff using simple inverser square falloff
 							shadowRay.dir = light.pos - shadowRay.pos;
 							float lightRadius = glm::length(shadowRay.dir);
 							shadowRay.dir = glm::normalize(shadowRay.dir);
-							lightFalloffIntensity = (light.intensity) / (std::powf(lightRadius, 1.0f));
+							lightFalloffIntensity = (light.intensity) / (std::powf(lightRadius, 2.0f));
 							lightVisibility /= scene->SHADOW_SAMPLES;
 						} 
 						else 
 						{
+
+							//if its not an area light, treat it as a simple point light with hard visible/not visible falloff
 							shadowRay.dir = light.pos - shadowRay.pos;
 							float lightRadius = glm::length(shadowRay.dir);
 							shadowRay.dir = glm::normalize(shadowRay.dir);

@@ -23,11 +23,12 @@ bool Material::loadMTL(const std::string& path, const std::string& materialName)
 		return false;
 
 	std::string line;
-
 	std::ifstream ifs;
 	ifs.open(path);
 	if(!ifs.is_open())
 		return false;
+
+	type = Material::DIFFUSE | Material::BPHONG_SPECULAR;
 
 	//clear file stream until it reaches the correct material name
 	//	indicates start of material data
@@ -39,6 +40,7 @@ bool Material::loadMTL(const std::string& path, const std::string& materialName)
 
 	while(getline(ifs, line))
 	{
+		//import texture
 		if(line.find("map_Kd") != std::string::npos)
 		{
 			int spacePos = line.find_first_of(' ');
@@ -46,16 +48,22 @@ bool Material::loadMTL(const std::string& path, const std::string& materialName)
 			if(texture.loadImage(texturePath))
 				hasTexture = true;
 		}
+		
+		//import shininess
 		else if(line.find("Ns") != std::string::npos)
 		{
 			int spacePos = line.find_first_of(' ');
 			shininess = std::stof(line.substr(spacePos + 1));
 		}
+		
+		//import IOR
 		else if(line.find("Ni") != std::string::npos)
 		{
 			int spacePos = line.find_first_of(' ');
 			indexOfRefrac = std::stof(line.substr(spacePos + 1));
 		}
+
+		//import diffuse color
 		else if(line.find("Kd") != std::string::npos)
 		{
 			//convert from normalized colors to [0, 255] scale
@@ -70,6 +78,8 @@ bool Material::loadMTL(const std::string& path, const std::string& materialName)
 
 			color = glm::vec3(r, g, b);
 		}
+
+		//import specular color
 		else if(line.find("Ks") != std::string::npos)
 		{
 			int spacePos = line.find_first_of(' ');
@@ -83,6 +93,10 @@ bool Material::loadMTL(const std::string& path, const std::string& materialName)
 
 			specularColor = glm::vec3(r, g, b);
 		}
+
+		//exit when next material is found
+		else if(line.find("newmtl") != std::string::npos)
+			break;
 	}
 
 	if(ifs.bad())
@@ -123,8 +137,8 @@ glm::vec3 Material::sample(const Ray& ray, float t) const
 	*/
 
 	//if lines are drawn from each vertex to the intersection point,
-	//	the ratio of the uvCoordinate of each point contributed to the intersection 
-	//	is equal to the ratio of the are of the opposite inner triangle to the area of the whole triangle
+	//	the ratio of the uvCoordinate of each point contributed to the intersection point
+	//	is equal to the ratio of the area of the opposite inner triangle to the area of the whole triangle
 	glm::vec3 p1 = ray.hitTri->getWorldCoords()[0];
 	glm::vec3 p2 = ray.hitTri->getWorldCoords()[1];
 	glm::vec3 p3 = ray.hitTri->getWorldCoords()[2];
@@ -154,12 +168,16 @@ glm::vec3 Material::sample(const Ray& ray, float t) const
 
 float Material::calcReflectivity(float angle, float n1)
 {
+	//calculates the reflectivity of the material using fresnel's law
+
 	float angleOfRefraction = std::asinf((n1*std::sin(angle)) / this->indexOfRefrac);
 	
+	//s polarized reflectance
 	float i1cos = n1*std::cosf(angle);
 	float r2cos = this->indexOfRefrac * std::cosf(angleOfRefraction);
 	float Rs = std::powf(std::fabsf((i1cos - r2cos) / (i1cos + r2cos)), 2.0f);
 	
+	//p polarized reflectance
 	float i2cos = n1*std::cosf(angleOfRefraction);
 	float r1cos = this->indexOfRefrac * std::cosf(angle);
 	float Rp = std::powf(std::fabsf((i2cos - r1cos) / (i2cos + r1cos)), 2.0f);

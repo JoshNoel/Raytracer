@@ -21,13 +21,15 @@ public:
 	//uvNum: set to number to offset uv index by in 'f' lines because obj does not reset uv indices by object
 	//	on return set to number of uv coordinates in object in order to update offset for next objects
 	bool loadOBJ(std::string path, int startLine, std::string& materialName, int& vertexNum, int& uvNum);
+
+	//initializes acceleration structure from triangle array
 	void initAccelStruct();
 
 
 	std::vector<Triangle*> tris;
 	Node* root;
 	
-	//returns if ray intersects with bounding box 
+	//tests for intersection using BVH tree
 	bool intersects(Ray& ray, float& thit0, float& thit1) const override;
 	glm::vec3 calcWorldIntersectionNormal(const Ray& ray) const override;
 

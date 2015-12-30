@@ -20,6 +20,9 @@ public:
 		timerMap.emplace(label, elapsed());
 	}
 
+	//appends currently recorded log to the .txt file at path
+		//logger ends at current time
+		//title used to identify log within the logger .txt file
 	static void printLog(std::string path, std::string title = "default");
 private:
 
@@ -31,6 +34,7 @@ private:
 
 	static std::chrono::steady_clock clock;
 	static std::chrono::steady_clock::time_point startTime;
-	//Map: description of time TO time
+
+	//Map: description of time TO the time itself
 	static std::unordered_map<std::string, std::chrono::duration<float, std::chrono::seconds::period>> timerMap;
 };

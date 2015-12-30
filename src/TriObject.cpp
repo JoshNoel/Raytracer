@@ -22,14 +22,16 @@ TriObject::~TriObject()
 
 bool TriObject::checkTris(const std::vector<Triangle*>* tris, Ray& ray, float& thit0, float& thit1) const
 {
-	//iterate vertices
+	//iterate triangles and test if there is an intersection
 	bool hit = false;
-	for(unsigned int i = 0; i < tris->size(); ++i)
+	std::vector<Triangle*>::const_iterator i;
+	for(i = tris->begin(); i != tris->end(); ++i)
 	{
-		if((*tris)[i]->intersects(ray, thit0, thit1))
+		if((*i)->intersects(ray, thit0, thit1))
 		{
+			
 			if(thit0 < ray.thit0)
-				ray.hitTri = (*tris)[i];
+				ray.hitTri = *i;
 			hit = true;
 		}	
 	}
@@ -49,7 +51,7 @@ bool TriObject::checkNode(Node* node, Ray& ray, float& thit0, float& thit1) cons
 			return checkTris(node->tris, ray, thit0, thit1);
 		}
 
-		//check tris in left or right node for intersection
+		//check tris in left or right node for intersection recursively
 		else
 		{
 			assert(node->left && node->right);
@@ -124,14 +126,18 @@ bool TriObject::loadOBJ(std::string path, int startLine, std::string& materialNa
 
 	while(getline(ifs, line))
 	{
+		//stop when stream reaches start of next object's information
 		if(line[0] == 'o')
 			break;
+
+		//sets the associated material name in the material library
 		if(line.find("usemtl") != std::string::npos)
 		{
 			int spacePos = line.find_first_of(' ');
 			materialName = line.substr(spacePos + 1);
 		}
 
+		//imports vertices that are a part of the object
 		if(line[0] == 'v' && line[1] != 'n' && line[1] != 't')
 		{
 			int spacePos = line.find_first_of(' ');
@@ -200,6 +206,7 @@ bool TriObject::loadOBJ(std::string path, int startLine, std::string& materialNa
 			points_uv[2] = (uvCoords.at(std::stoi(line.substr(slashPos + 1, spacePos)) - 1 - uvOffset));
 			//end import uv coordinate order
 
+			//create a bounding box for the imported triangle
 			BoundingBox bbox;
 			bbox.minBounds.x = bbox.maxBounds.x = points[0].x;
 			bbox.minBounds.y = bbox.maxBounds.y = points[0].y;
@@ -232,10 +239,11 @@ bool TriObject::loadOBJ(std::string path, int startLine, std::string& materialNa
 			tris.back()->setUVCoords(points_uv);
 			tris.back()->aabb = bbox;
 			tris.back()->parent = this->parent;
-			tris.back()->position = this->position;
+			tris.back()->setPosition(this->position);
 		}
 	}
 
+	//add to offset for use in the next object imported by GeometryObj::loadOBJ
 	vertexNum = vertexOffset + vertices.size();
 	uvNum = uvOffset + uvCoords.size();
 

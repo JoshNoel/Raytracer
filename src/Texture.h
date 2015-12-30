@@ -4,6 +4,7 @@
 #include "glm\glm.hpp"
 #include "Image.h"
 
+//Holds an image that can be added to a material and uv-mapped to a mesh
 class Texture
 {
 public:
@@ -11,7 +12,7 @@ public:
 	~Texture();
 
 	//Path should not have extra slashes as escape characters
-	//	needs '\' not '\\'
+	//	needs '\' (or '/') not '\\' (or '//')
 	bool loadImage(const std::string& path);
 
 	//uvCoord stores normalized coordinates

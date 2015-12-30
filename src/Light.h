@@ -18,10 +18,11 @@ public:
 	~Light();
 	Light& operator=(const Light&);
 
+	//calculates direction of light from x, y, and z angles
 	void calcDirection(float xAngle, float yAngle, float zAngle); 
-	void createShape(const Plane&);
-	//void createSphere(const Sphere&);
 
+	//creates an area light shape from a plane
+	void createShape(const Plane&);
 	
 	LIGHT_TYPE type;
 	float intensity;

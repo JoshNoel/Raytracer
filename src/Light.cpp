@@ -70,5 +70,5 @@ void Light::calcDirection(float xAngle, float yAngle, float zAngle)
 void Light::createShape(const Plane& shape)
 {
 	areaShape = new Plane(shape);
-	areaShape->position = pos;
+	areaShape->setPosition(pos);
 }

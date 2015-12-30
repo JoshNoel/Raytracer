@@ -6,8 +6,7 @@ class Triangle;
 class Ray
 {
 	/*
-	*Ray implicit=
-	*|pos+t(dir)|
+	*Ray = position + direction (t)
 	*/
 public:
 	Ray();
@@ -17,10 +16,17 @@ public:
 	glm::vec3 pos;
 	glm::vec3 dir;
 
+	//hit closer to origin of ray
 	float thit0;
-	float thit1;
 
+	//hit farther from origin of ray
+	float thit1;
+	//thit0 = thit1 if there is only 1 intersection
+
+	//object ray has intersected
 	GeometryObj* hitObject;
+
+	//triangle ray has intersected, if it intersects a TriObject
 	Triangle* hitTri;
 };
 

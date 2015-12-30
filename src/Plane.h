@@ -2,6 +2,7 @@
 #include "Shape.h"
 #include "MathHelper.h"
 
+//small depth added in order to create an axis aligned bounding box
 #ifndef PLANE_DEPTH
 	#define PLANE_DEPTH 0.01f
 #endif

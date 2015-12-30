@@ -16,9 +16,9 @@ class TriObject;
 *E1.4 solve Eq.2 for t: -[((o-P₀) • N)]/[d • N] = t
 **************************************************
 *************TRIANGLE INTERSECTION****************
-*If intersection with plane is inside triangle then,
-*the angle between any edge, and the vector between the start of that edge and the intersection
-*point is less than 90 degees, so the the dot product between these vectors is positive
+*If the ray intersects the intersection point within the triangle formed by the three points
+*then cross product between side vector pointing CCW between points, and vector from start of a side
+*to intersection will always point in same direction as the normal
 */
 class Triangle : public Shape
 {
@@ -39,22 +39,33 @@ public:
 
 	//returns points in object space
 	std::array<glm::vec3, 3> getPoints() const;
+
 	//returns uvCoordinates
 	bool getUV(std::array<glm::vec2, 3>& coords) const;
 
 	bool intersects(Ray& ray, float& thit0, float& thit1) const override;
-	glm::vec3 getWorldPos() const;
+
+	
 	
 	glm::vec3 normal;
 
 	bool hasUV = false;
+
+	//updates position, points_world, and triangleCenter
+	void setPosition(const glm::vec3& pos) override;
 
 private:
 	//used to compute normal at creation
 	glm::vec3 calcObjectNormal() const;
 
 	std::array<glm::vec3, 3> points;
+	std::array<glm::vec3, 3> points_world;
 	std::array<glm::vec2, 3> uvCoords;
+
+	glm::vec3 triangleCenter;
+
+	//calculate center of triangle
+	glm::vec3 calcCenter() const;
 };
 
 

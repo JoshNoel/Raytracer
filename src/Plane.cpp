@@ -11,7 +11,7 @@ Plane::Plane(glm::vec3 position, float xAngle, float yAngle, float zAngle, glm::
 
 void Plane::setProperties(float xAngle, float yAngle, float zAngle, glm::vec2 dims)
 {
-	//Calculate U,V,N
+	//Calculate U,V,N vectors representing the sides and normal of the triangle
 	glm::vec3 tempNorm(0, 1, 0);
 	tempNorm = glm::rotateX(tempNorm, xAngle);
 	tempNorm = glm::rotateY(tempNorm, yAngle);

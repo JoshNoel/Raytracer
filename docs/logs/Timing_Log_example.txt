@@ -1,0 +1,24 @@
+===========================
+Example: RELEASE
+
+Render Time: 51.7387
+===========================
+Example: RELEASE
+
+Render Time: 63.9968
+===========================
+Example: RELEASE
+
+Render Time: 61.1085
+===========================
+Example: RELEASE
+
+Render Time: 60.4112
+===========================
+Example: RELEASE
+
+Render Time: 57.8064
+===========================
+Example: RELEASE
+
+Render Time: 55.6511
