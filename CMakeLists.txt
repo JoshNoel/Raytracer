@@ -1,5 +1,9 @@
 #Dir: Root
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 3.1.0 FATAL_ERROR)
+SET(CXX_STANDARD 11)
+SET(CXX_STANDARD_REQUIRED ON)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y -pthread")
+
 project (Raytracer)
 SET(Raytracer_VERSION_MAJOR 1)
 SET(Raytracer_VERSION_MINOR 0)
@@ -12,22 +16,25 @@ CONFIGURE_FILE(
 	)
 ADD_EXECUTABLE(Raytracer
 	lib/lodepng/lodepng.cpp
+	src/BoundingBox.cpp
 	src/Camera.cpp
-	src/Main.cpp
+	src/GeometryObj.cpp
 	src/Image.cpp
+	src/Intersection.cpp
 	src/Light.cpp
+	src/Logger.cpp
+	src/Main.cpp
 	src/Material.cpp
-	src/Math.cpp
-	src/Object.cpp	
+	src/Node.cpp
 	src/Plane.cpp
 	src/Ray.cpp
 	src/Renderer.cpp
+	src/Scene.cpp
+	src/Shape.cpp
 	src/Sphere.cpp
 	src/TriObject.cpp
-	src/BoundingBox.cpp
-	src/Scene.cpp
-	src/Logger.cpp
-	src/GeometryObj.cpp)
+	src/Triangle.cpp
+	src/Texture.cpp)
 
 
 set(GLM_INCLUDE_DIR lib/glm)

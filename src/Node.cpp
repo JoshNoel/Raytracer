@@ -5,9 +5,9 @@
 //returns surface area of a given BoundingBox
 float getSurfaceArea(const BoundingBox& aabb)
 {
-	float width = std::fabsf(aabb.maxBounds.x - aabb.minBounds.x);
-	float height = std::fabsf(aabb.maxBounds.y - aabb.minBounds.y);
-	float length = std::fabsf(aabb.maxBounds.z - aabb.minBounds.z);
+	float width = std::fabs(aabb.maxBounds.x - aabb.minBounds.x);
+	float height = std::fabs(aabb.maxBounds.y - aabb.minBounds.y);
+	float length = std::fabs(aabb.maxBounds.z - aabb.minBounds.z);
 	return 2 * (width * height + width * length + length * height);
 }
 
@@ -48,7 +48,7 @@ void Node::createNode(std::vector<Triangle*>* t, unsigned depth)
 		{
 			float pos = (*tris)[i]->aabb.getCentroid()[splitAxis];
 			float relativePos = (pos - minB) / (maxB - minB) * numBuckets;
-			int bucketIndex = int(std::floorf(relativePos));
+			int bucketIndex = int(std::floor(relativePos));
 
 			//if triangle is on minBounds of bucket on the split axis, then it goes in the previous bucket
 			//if it is located on the minBounds of bucket 0, then it goes in bucket 0
@@ -193,7 +193,7 @@ void Node::createNode(std::vector<Triangle*>* t, unsigned depth)
 				{
 					//if triangle is in bucket less than or equal to splitBucket, than it is in left node
 					float pos = tri->aabb.getCentroid()[splitAxis];
-					float index = std::floorf((pos - minB) / (maxB - minB) * Node::originialNumBuckets);
+					float index = std::floor((pos - minB) / (maxB - minB) * Node::originialNumBuckets);
 					if(index <= splitBucketIndex)
 					{
 						return true;

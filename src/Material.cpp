@@ -7,7 +7,7 @@
 
 Material::Material(glm::vec3 col, float dc, glm::vec3 specCol, float sc, float shine, float ref, float ior)
 	: color(col), diffuseCoef(dc), indexOfRefrac(ior), specCoef(sc),
-	specularColor(specCol), shininess(shine), reflectivity(ref), texture()
+        specularColor(specCol), shininess(shine), reflectivity(ref), texture()
 {
 }
 
@@ -127,7 +127,7 @@ glm::vec3 Material::sample(const Ray& ray, float t) const
 						 /	    \
 						/	 	 \
 					   /		  \
-					  /		•	   \
+                                          /			   \
 					 /	    	    \
 					/			     \
 				   /__________________\
@@ -170,17 +170,17 @@ float Material::calcReflectivity(float angle, float n1)
 {
 	//calculates the reflectivity of the material using fresnel's law
 
-	float angleOfRefraction = std::asinf((n1*std::sin(angle)) / this->indexOfRefrac);
+	float angleOfRefraction = std::asin((n1*std::sin(angle)) / this->indexOfRefrac);
 	
 	//s polarized reflectance
-	float i1cos = n1*std::cosf(angle);
-	float r2cos = this->indexOfRefrac * std::cosf(angleOfRefraction);
-	float Rs = std::powf(std::fabsf((i1cos - r2cos) / (i1cos + r2cos)), 2.0f);
+	float i1cos = n1*std::cos(angle);
+	float r2cos = this->indexOfRefrac * std::cos(angleOfRefraction);
+	float Rs = std::pow(std::fabs((i1cos - r2cos) / (i1cos + r2cos)), 2.0f);
 	
 	//p polarized reflectance
-	float i2cos = n1*std::cosf(angleOfRefraction);
-	float r1cos = this->indexOfRefrac * std::cosf(angle);
-	float Rp = std::powf(std::fabsf((i2cos - r1cos) / (i2cos + r1cos)), 2.0f);
+	float i2cos = n1*std::cos(angleOfRefraction);
+	float r1cos = this->indexOfRefrac * std::cos(angle);
+	float Rp = std::pow(std::fabs((i2cos - r1cos) / (i2cos + r1cos)), 2.0f);
 
 	return (Rs + Rp) / 2.0f;
 }

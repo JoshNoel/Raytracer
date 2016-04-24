@@ -22,3 +22,27 @@ Render Time: 57.8064
 Example: RELEASE
 
 Render Time: 55.6511
+===========================
+Example: DEBUG
+
+Render Time: 11.2037
+===========================
+Example: DEBUG
+
+Render Time: 11.1937
+===========================
+Example: DEBUG
+
+Render Time: 11.0608
+===========================
+Example: DEBUG
+
+Render Time: 11.1789
+===========================
+Example: DEBUG
+
+Render Time: 41.2515
+===========================
+Example: DEBUG
+
+Render Time: 27.485

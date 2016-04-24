@@ -1,5 +1,5 @@
 #pragma once
-#include "glm\glm.hpp"
+#include "glm/glm.hpp"
 #include "BoundingBox.h"
 #include <vector>
 #include "Triangle.h"

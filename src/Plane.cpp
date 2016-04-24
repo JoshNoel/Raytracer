@@ -1,7 +1,7 @@
 #include "Plane.h"
 #include "MathHelper.h"
-#include "glm\glm.hpp"
-#include "glm\gtx\rotate_vector.hpp"
+#include "glm/glm.hpp"
+#include "glm/gtx/rotate_vector.hpp"
 
 Plane::Plane(glm::vec3 position, float xAngle, float yAngle, float zAngle, glm::vec2 dims)
 	: Shape(position)

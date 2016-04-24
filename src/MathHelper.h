@@ -14,7 +14,7 @@
 	#define _INFINITY 10000.0f
 #endif
 
-#define _PI_ 2.0f*std::acosf(0.0f)
+#define _PI_ 2.0f*std::acos(0.0f)
 
 //converts degrees to radians
 #define degToRad(d) d*(_PI_ / 180.0f)

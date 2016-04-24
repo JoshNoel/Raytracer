@@ -1,5 +1,5 @@
 #pragma once
-#include "glm\glm.hpp"
+#include "glm/glm.hpp"
 #include "Ray.h"
 #include "Texture.h"
 

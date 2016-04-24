@@ -1,5 +1,5 @@
 #include "Light.h"
-#include "glm\gtx\rotate_vector.hpp"
+#include "glm/gtx/rotate_vector.hpp"
 
 Light::Light(const glm::vec3& p, const glm::vec3& c, float i, LIGHT_TYPE type)
 	: pos(p),

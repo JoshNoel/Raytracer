@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "glm\glm.hpp"
+#include "glm/glm.hpp"
 #include <array>
 #include "Shape.h"
 

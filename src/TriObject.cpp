@@ -1,7 +1,7 @@
 #include "TriObject.h"
 #include <fstream>
 #include <istream>
-#include "glm\glm.hpp"
+#include "glm/glm.hpp"
 #include "MathHelper.h"
 #include "BoundingBox.h"
 
@@ -88,7 +88,8 @@ bool TriObject::loadOBJ(const std::string& path)
 {
 	int x, y;
 	x = y = 0;
-	return loadOBJ(path, 0, std::string(), x, y);
+        tempMatName = "";
+        return loadOBJ(path, 0, tempMatName, x, y);
 }
 
 bool TriObject::loadOBJ(std::string path, int startLine, std::string& materialName, int& vertexNum, int& uvNum)

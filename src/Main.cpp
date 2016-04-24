@@ -3,13 +3,15 @@
 #include "Sphere.h"
 #include "GeometryObj.h"
 #include "Logger.h"
+#include <iostream>
+#include <stdlib.h>
 
 ///In current setup it will render code_example.png///
-void main(char** args)
+int main()
 {
 	//create image and set output path
 	Image image(800, 800);
-	std::string outputImagePath = "./docs/examples/code_example.png";
+        std::string outputImagePath = "./docs/examples/test.png";
 
 	//create scene and set background color or image
 	Scene scene;
@@ -31,11 +33,11 @@ void main(char** args)
 	//create list of objects(meshes and materials) from .obj file, and add objects to the scene
 	std::vector<std::unique_ptr<GeometryObj>> objectList;
 	bool flipNormals = false;
-	if(GeometryObj::loadOBJ("./docs/models/dragon_2.obj", &objectList, glm::vec3(0, 0, -3), flipNormals))
+        if(GeometryObj::loadOBJ("./docs/models/box.obj", &objectList, glm::vec3(0, 0, -5), flipNormals))
 	{
 		for(int i = 0; i < objectList.size(); ++i)
 		{
-			scene.addObject(objectList[i]);
+			scene.addObject(std::move(objectList[i]));
 		}
 	}
 
@@ -48,7 +50,7 @@ void main(char** args)
 	light.type = Light::POINT;
 	light.pos = glm::vec3(0, 0, 0);
 	light.color = glm::vec3(255, 197, 143);
-	light.intensity = 20.0f;
+        light.intensity = 10.0f;
 	Plane lightPlane = Plane(light.pos, degToRad(-120.0f), degToRad(0.0f), 0.0f, glm::vec2(15.0f, 15.0f));
 	light.createShape(lightPlane);
 	light.isAreaLight = true;
@@ -69,4 +71,8 @@ void main(char** args)
 
 	image.outputPNG(outputImagePath);
 	Logger::printLog("./docs/logs/Timing_Log_example.txt", "Example");
+
+        std::cout << "done\n";
+
+	return 0;
 }

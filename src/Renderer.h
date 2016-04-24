@@ -55,13 +55,13 @@ private:
 	bool hitsObject(Ray& ray) const;
 
 	//starts a rendering thread
-	void startThread(renderThread*) const;
+        void startThread(renderThread*) const;
 	mutable std::mutex mutex;
 
 	//used to generate random points on an area light to crate soft shadows
-	mutable std::mt19937 rng;
-	std::uniform_real_distribution<float> distributionX;
-	std::uniform_real_distribution<float> distributionY;
+        mutable std::mt19937 rng;
+        mutable std::uniform_real_distribution<float> distributionX;
+        mutable std::uniform_real_distribution<float> distributionY;
 
 	static const float SHADOW_RAY_LENGTH;
 	static const int NUM_THREADS;

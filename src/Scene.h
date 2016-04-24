@@ -2,7 +2,7 @@
 #include <memory>
 #include <vector>
 #include "Light.h"
-#include "glm\glm.hpp"
+#include "glm/glm.hpp"
 #include "GeometryObj.h"
 #include "Node.h"
 #include "TriObject.h"
@@ -14,7 +14,7 @@ public:
 	~Scene();
 
 	//adds an object to the scene and sets its id
-	void addObject(std::unique_ptr<GeometryObj> &o) 
+	void addObject(std::unique_ptr<GeometryObj> o) 
 	{ 
 		o->id = idCounter++;
 		objectList.push_back(std::move(o));

@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include "lodepng.h"
-#include "glm\glm.hpp"
+#include "glm/glm.hpp"
 #include "Image.h"
 
 //Holds an image that can be added to a material and uv-mapped to a mesh

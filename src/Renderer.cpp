@@ -3,7 +3,7 @@
 #include <iostream>
 #include "TriObject.h"
 #include "GeometryObj.h"
-#include "glm\gtx\rotate_vector.hpp"
+#include "glm/gtx/rotate_vector.hpp"
 #include <iterator>
 
 
@@ -12,8 +12,8 @@ const float Renderer::SHADOW_RAY_LENGTH = 50.0f;
 const int Renderer::NUM_THREADS = 8;
 
 Renderer::Renderer(const Scene* s, Image* i)
-	:image(i), camera(), scene(s), distributionX(0, std::nextafterf(1.0f, FLT_MAX)),
-	distributionY(0, std::nextafterf(1.0f, FLT_MAX)), mutex(), pixelsRendered(0)
+	:image(i), camera(), scene(s), distributionX(0, std::nextafter(1.0f, FLT_MAX)),
+        distributionY(0, std::nextafter(1.0f, FLT_MAX)), rng(1), mutex(), pixelsRendered(0)
 {
 	//initialize random number generator for shadow sampling
 	std::random_device device;
@@ -51,7 +51,7 @@ glm::vec3 refract(glm::vec3 dir, glm::vec3 norm, float ior1, float ior2)
 	glm::vec3 iPerpToNorm = dir + dirOnNorm;
 	float ratio = ior1 / ior2;
 	glm::vec3 rPerpToNorm = ratio * iPerpToNorm;
-	float thetaInner = std::asinf(glm::length(rPerpToNorm));
+	float thetaInner = std::asin(glm::length(rPerpToNorm));
 	glm::vec3 rOnNorm = cosf(thetaInner) * -norm;
 
 	return glm::normalize(rPerpToNorm + rOnNorm);
@@ -87,7 +87,7 @@ void Renderer::render()
 
 	camera.calculate(image->getAR());
 
-	int imageSegmentLength = int(std::floorf(image->height / NUM_THREADS));
+	int imageSegmentLength = int(std::floor(image->height / NUM_THREADS));
 
 	//assign threads vertical sections of image that they will render simultaneously
 	std::array<renderThread, NUM_THREADS> threadArray;
@@ -260,13 +260,13 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 						{
 							float halfX = light.areaShape->getDimensions().x / 2.0f;
 							float halfY = light.areaShape->getDimensions().y / 2.0f;
-							std::uniform_real_distribution<float> distributionX(-1.0f, std::nextafterf(1.0f, FLT_MAX));
-							std::uniform_real_distribution<float> distributionY(-1.0f, std::nextafterf(1.0f, FLT_MAX));
+							std::uniform_real_distribution<float> distributionX(-1.0f, std::nextafter(1.0f, FLT_MAX));
+							std::uniform_real_distribution<float> distributionY(-1.0f, std::nextafter(1.0f, FLT_MAX));
 
 							//In order to create grid scene->SHADOW_SAMPLES must be a perfect square
-							for(int sampleX = -std::sqrtf(scene->SHADOW_SAMPLES) / 2; sampleX < std::sqrtf(scene->SHADOW_SAMPLES) / 2; sampleX++)
+							for(int sampleX = -std::sqrt(scene->SHADOW_SAMPLES) / 2; sampleX < std::sqrt(scene->SHADOW_SAMPLES) / 2; sampleX++)
 							{
-								for(int sampleY = -std::sqrtf(scene->SHADOW_SAMPLES) / 2; sampleY < std::sqrtf(scene->SHADOW_SAMPLES) / 2; sampleY++)
+								for(int sampleY = -std::sqrt(scene->SHADOW_SAMPLES) / 2; sampleY < std::sqrt(scene->SHADOW_SAMPLES) / 2; sampleY++)
 								{
 									float xPos = distributionX(rng);
 									float yPos = distributionY(rng);
@@ -284,7 +284,7 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 									//	Center + [((w * gridSquareSideLength) - sign(w) * gridSquareSideLength / 2), 
 									//				(h * gridSquareSideLength) - sign(h) * gridSquareSideLength / 2)
 									float numGridSquares = scene->SHADOW_SAMPLES;
-									float gridSquareSideLength = halfX / (std::sqrtf(numGridSquares) / 2.0f);
+									float gridSquareSideLength = halfX / (std::sqrt(numGridSquares) / 2.0f);
 
 									//center of grid square
 									//	traverse each column
@@ -327,7 +327,7 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 							shadowRay.dir = light.pos - shadowRay.pos;
 							float lightRadius = glm::length(shadowRay.dir);
 							shadowRay.dir = glm::normalize(shadowRay.dir);
-							lightFalloffIntensity = (light.intensity) / (std::powf(lightRadius, 2.0f));
+							lightFalloffIntensity = (light.intensity) / (std::pow(lightRadius, 2.0f));
 							lightVisibility /= scene->SHADOW_SAMPLES;
 						} 
 						else 
@@ -384,7 +384,7 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 						if(glm::dot(view, r) > 0.0f)
 						{
 							finalCol += material.specularColor * material.specCoef
-								* std::powf(glm::dot(view, r), material.shininess);
+								* std::pow(glm::dot(view, r), material.shininess);
 						}
 					}
 					if(material.type & Material::REFRACTIVE)
@@ -433,9 +433,9 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 							float cos2 = glm::dot(innerRay.dir, -normal);
 
 							float parallel = (ior2*cos1 - ior1*cos2) / (ior2*cos1 + ior1*cos2);
-							parallel = std::powf(parallel, 2.0f);
+							parallel = std::pow(parallel, 2.0f);
 							float perpendicular = (ior1*cos2 - ior2*cos1) / (ior1*cos2 + ior2*cos1);
-							perpendicular = std::powf(perpendicular, 2.0f);
+							perpendicular = std::pow(perpendicular, 2.0f);
 
 							//reflectionRatio is average of s and p polarization contributions
 							reflectionRatio = 0.5f * (parallel + perpendicular);
