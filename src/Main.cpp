@@ -33,7 +33,7 @@ int main()
 	//create list of objects(meshes and materials) from .obj file, and add objects to the scene
 	std::vector<std::unique_ptr<GeometryObj>> objectList;
 	bool flipNormals = false;
-        if(GeometryObj::loadOBJ("./docs/models/box.obj", &objectList, glm::vec3(0, 0, -5), flipNormals))
+	if(GeometryObj::loadOBJ("./docs/models/cone.obj", &objectList, glm::vec3(0, 0, -10), flipNormals))
 	{
 		for(int i = 0; i < objectList.size(); ++i)
 		{
@@ -50,7 +50,7 @@ int main()
 	light.type = Light::POINT;
 	light.pos = glm::vec3(0, 0, 0);
 	light.color = glm::vec3(255, 197, 143);
-        light.intensity = 10.0f;
+	light.intensity = 10.0f;
 	Plane lightPlane = Plane(light.pos, degToRad(-120.0f), degToRad(0.0f), 0.0f, glm::vec2(15.0f, 15.0f));
 	light.createShape(lightPlane);
 	light.isAreaLight = true;
@@ -72,7 +72,6 @@ int main()
 	image.outputPNG(outputImagePath);
 	Logger::printLog("./docs/logs/Timing_Log_example.txt", "Example");
 
-        std::cout << "done\n";
 
 	return 0;
 }

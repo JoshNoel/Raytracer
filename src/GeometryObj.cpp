@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include "TriObject.h"
+#include <memory>
 
 GeometryObj::GeometryObj(std::shared_ptr<Shape> s, const Material& mat)
 	: material(mat), shape(s)

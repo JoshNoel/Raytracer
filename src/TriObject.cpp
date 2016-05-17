@@ -5,7 +5,6 @@
 #include "MathHelper.h"
 #include "BoundingBox.h"
 
-
 TriObject::TriObject()
 	: Shape(glm::vec3(0,0,0))
 {

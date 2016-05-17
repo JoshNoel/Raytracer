@@ -2,16 +2,16 @@
 #include "Ray.h"
 #include "Sphere.h"
 #include "Image.h"
-#include <vector>
 #include "Camera.h"
 #include "Light.h"
 #include "Plane.h"
-#include <memory>
 #include "Scene.h"
+#include "ThreadPool.h"
+#include <vector>
+#include <memory>
 #include <random>
-#include <thread>
-#include <mutex>
 #include <atomic>
+
 
 class Renderer
 {
@@ -26,22 +26,6 @@ public:
 
 private:
 
-	struct renderThread
-	{
-	public:
-		std::thread m_thread;
-		int start;
-		int end;
-		glm::vec3* data;
-
-		renderThread() {};
-		~renderThread()
-		{
-			if(m_thread.joinable())
-				m_thread.join();
-		};
-	};
-
 	const Scene* scene;
 
 	//casts ray into the scene and returns color at intersection point if there is an intersection
@@ -54,14 +38,13 @@ private:
 	bool hitsObject(Ray& ray, float& thit0, float& thit1) const;
 	bool hitsObject(Ray& ray) const;
 
-	//starts a rendering thread
-        void startThread(renderThread*) const;
-	mutable std::mutex mutex;
+	//handles thread management
+	ThreadPool threadPool;
 
 	//used to generate random points on an area light to crate soft shadows
-        mutable std::mt19937 rng;
-        mutable std::uniform_real_distribution<float> distributionX;
-        mutable std::uniform_real_distribution<float> distributionY;
+	mutable std::minstd_rand rng;
+	mutable std::uniform_real_distribution<float> distributionX;
+	mutable std::uniform_real_distribution<float> distributionY;
 
 	static const float SHADOW_RAY_LENGTH;
 	static const int NUM_THREADS;

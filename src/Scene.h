@@ -56,6 +56,7 @@ public:
 			//1 = completly visible
 			//0 = completly in shadow
 	const int SHADOW_SAMPLES = 16;
+	int SQRT_DIV2_SHADOW_SAMPLES;
 
 	//samples to cast per pixel
 		//also uses stratified random sampling (like with the area lights) within each pixel

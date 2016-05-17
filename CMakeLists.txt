@@ -4,6 +4,10 @@ SET(CXX_STANDARD 11)
 SET(CXX_STANDARD_REQUIRED ON)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y -pthread")
 
+
+SET(EXECUTABLE_OUTPUT_PATH bin)
+MESSAGE( STATUS "PROJECT_BINARY_DIR: " ${PROJECT_BINARY_DIR} )
+
 project (Raytracer)
 SET(Raytracer_VERSION_MAJOR 1)
 SET(Raytracer_VERSION_MINOR 0)
@@ -34,7 +38,7 @@ ADD_EXECUTABLE(Raytracer
 	src/Sphere.cpp
 	src/TriObject.cpp
 	src/Triangle.cpp
-	src/Texture.cpp)
+	src/Texture.cpp src/ThreadPool.cpp src/ThreadPool.h)
 
 
 set(GLM_INCLUDE_DIR lib/glm)

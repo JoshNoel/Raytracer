@@ -87,6 +87,15 @@ void Renderer::render()
 
 	camera.calculate(image->getAR());
 
+
+	for(int i = 0; i < image->width; i++)
+	{
+		for(int j = 0; j < image->height; j++)
+		{
+			threadPool.
+		}
+	}
+	///////////////////////////////////////////////////////////////////
 	int imageSegmentLength = int(std::floor(image->height / NUM_THREADS));
 
 	//assign threads vertical sections of image that they will render simultaneously
@@ -137,7 +146,7 @@ void Renderer::render()
 }
 
 //Runs code for each tread to render its section of the image
-void Renderer::startThread(renderThread* renderThread) const
+void Renderer::sendJob(renderThread* renderThread) const
 {
 	int start = renderThread->start;
 	int end = renderThread->end;
@@ -172,6 +181,8 @@ void Renderer::startThread(renderThread* renderThread) const
 			renderThread->data[(i-start)*width + j] = (color / float(samples));
 		}
 	}
+
+	std::cout << " thread done\n";
 }
 
 
@@ -264,9 +275,9 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 							std::uniform_real_distribution<float> distributionY(-1.0f, std::nextafter(1.0f, FLT_MAX));
 
 							//In order to create grid scene->SHADOW_SAMPLES must be a perfect square
-							for(int sampleX = -std::sqrt(scene->SHADOW_SAMPLES) / 2; sampleX < std::sqrt(scene->SHADOW_SAMPLES) / 2; sampleX++)
+							for(int sampleX = -scene->SQRT_DIV2_SHADOW_SAMPLES; sampleX < scene->SQRT_DIV2_SHADOW_SAMPLES; sampleX++)
 							{
-								for(int sampleY = -std::sqrt(scene->SHADOW_SAMPLES) / 2; sampleY < std::sqrt(scene->SHADOW_SAMPLES) / 2; sampleY++)
+								for(int sampleY = -scene->SQRT_DIV2_SHADOW_SAMPLES; sampleY < scene->SQRT_DIV2_SHADOW_SAMPLES; sampleY++)
 								{
 									float xPos = distributionX(rng);
 									float yPos = distributionY(rng);
@@ -367,8 +378,9 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 						//dot product gives cosine of angle between the vectors
 						//sample() gives the diffuse color of the point
 						//dot product must be positive or else the light has no influence
-						if(glm::dot(normal, shadowRay.dir) > 0.0f)
-							finalCol += glm::dot(normal, shadowRay.dir) * material.sample(ray, ray.thit0) * material.diffuseCoef;
+						float dot = glm::dot(normal, shadowRay.dir);
+						if(dot > 0.0f)
+							finalCol += dot * material.sample(ray, ray.thit0) * material.diffuseCoef;
 					}
 
 					if(material.type & Material::BPHONG_SPECULAR)
@@ -381,10 +393,10 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 						glm::vec3 bisector = glm::normalize(view + shadowRay.dir);
 						glm::vec3 r = reflect(-shadowRay.dir, normal);
 						float dot = glm::dot(view, r);
-						if(glm::dot(view, r) > 0.0f)
+						if(dot > 0.0f)
 						{
 							finalCol += material.specularColor * material.specCoef
-								* std::pow(glm::dot(view, r), material.shininess);
+								* std::pow(dot, material.shininess);
 						}
 					}
 					if(material.type & Material::REFRACTIVE)
