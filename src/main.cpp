@@ -12,7 +12,7 @@ int main()
 {
 	//create image and set output path
 	Image image(800, 800);
-        std::string outputImagePath = "C:/Projects/Raytracer/docs/examples/test2.png";
+        std::string outputImagePath = "/home/josh/Projects/cuda/raytracer/docs/examples/test2.png";
 
 
 	//create scene and set background color or image
@@ -31,7 +31,7 @@ int main()
 	//create plane object that holds shape and material
 	std::unique_ptr<GeometryObj> plane = std::make_unique<GeometryObj>(planeShape, planeMat);
 	scene.addObject(std::move(plane));
-	
+
 	//create list of objects(meshes and materials) from .obj file, and add objects to the scene
 	std::vector<std::unique_ptr<GeometryObj>> objectList;
 	bool flipNormals = false;
@@ -46,7 +46,7 @@ int main()
 
 	//create an area light to illuminate the scene
 		//area light is a plane
-		//area lights allow for soft shadows because 
+		//area lights allow for soft shadows because
 			//intensity of the shadow depends on area of light that is visible to the point
 	Light light;
 	light.type = Light::POINT;
@@ -56,7 +56,7 @@ int main()
 	Plane lightPlane = Plane(light.pos, degToRad(-120.0f), degToRad(0.0f), 0.0f, glm::vec2(15.0f, 15.0f));
 	light.createShape(lightPlane);
 	light.isAreaLight = true;
-	scene.addLight(light);	
+	scene.addLight(light);
 
 	//create renderer with the initialized scene and image pointers
 	Renderer renderer(&scene, &image);
@@ -78,3 +78,6 @@ int main()
 
 	return 0;
 }
+
+
+

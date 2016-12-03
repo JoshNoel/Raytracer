@@ -12,6 +12,10 @@ Core::~Core()
 
 void Core::render()
 {
+#ifdef USE_CUDA
+	//if using cuda launch kernel
+
+#else
 	for(int i = 0; i < renderer->image->width; i++)
 	{
 		for(int j = 0; j < renderer->image->height; j++)
@@ -26,6 +30,9 @@ void Core::render()
 	}
 	threadPool.doneAddingJobs();
 	threadPool.joinThreads();
+
+#endif
+
 }
 
 

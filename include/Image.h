@@ -2,6 +2,10 @@
 #include <string>
 #include <vector>
 #include "glm/glm.hpp"
+#define USE_CUDA
+
+#include "CudaDef.h"
+
 class Image
 {
 public:

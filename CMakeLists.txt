@@ -11,7 +11,7 @@ project (Raytracer)
 SET(Raytracer_VERSION_MAJOR 1)
 SET(Raytracer_VERSION_MINOR 0)
 
-INCLUDE_DIRECTORIES(src)
+INCLUDE_DIRECTORIES(include)
 
 CONFIGURE_FILE(
 	src/RaytracerConfig.h.in 
