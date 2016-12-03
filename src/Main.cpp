@@ -4,6 +4,7 @@
 #include "GeometryObj.h"
 #include "Logger.h"
 #include <iostream>
+#include "Core.h"
 #include <stdlib.h>
 
 ///In current setup it will render code_example.png///
@@ -11,7 +12,8 @@ int main()
 {
 	//create image and set output path
 	Image image(800, 800);
-        std::string outputImagePath = "./docs/examples/test.png";
+        std::string outputImagePath = "C:/Projects/Raytracer/docs/examples/test2.png";
+
 
 	//create scene and set background color or image
 	Scene scene;
@@ -33,9 +35,9 @@ int main()
 	//create list of objects(meshes and materials) from .obj file, and add objects to the scene
 	std::vector<std::unique_ptr<GeometryObj>> objectList;
 	bool flipNormals = false;
-	if(GeometryObj::loadOBJ("./docs/models/cone.obj", &objectList, glm::vec3(0, 0, -10), flipNormals))
+	if(GeometryObj::loadOBJ("C:/Projects/Raytracer/docs/models/monkey.obj", &objectList, glm::vec3(0, -1, -6), flipNormals))
 	{
-		for(int i = 0; i < objectList.size(); ++i)
+		for(unsigned int i = 0; i < objectList.size(); ++i)
 		{
 			scene.addObject(std::move(objectList[i]));
 		}
@@ -58,20 +60,21 @@ int main()
 
 	//create renderer with the initialized scene and image pointers
 	Renderer renderer(&scene, &image);
+	//create core to handle assigning of rendering tasks
+	Core core(&renderer);
 
 	//sets ambient lighting of the scene
 		//minimum possible color of an unlit point
 	scene.setAmbient(glm::vec3(255, 255, 255), 0.1f);
 
-
+	//start logger, and then tell core to start rendering
 	Logger::startClock();
-	renderer.render();
+	core.render();
 	Logger::record("Render Time");
 
 
 	image.outputPNG(outputImagePath);
 	Logger::printLog("./docs/logs/Timing_Log_example.txt", "Example");
-
 
 	return 0;
 }

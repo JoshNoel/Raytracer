@@ -27,8 +27,12 @@ public:
 	//If imported through GeometryObj::loadOBJ, name contains the name of the object from the .obj file
 	std::string name;
 
-protected:
+private:
+	static const std::string DEFAULT_MTL_PATH;
+	static const std::string DEFAULT_MTL_NAME;
 
+protected:
+	
 	Material material;
 	std::shared_ptr<Shape> shape;
 };

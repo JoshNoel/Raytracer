@@ -3,6 +3,7 @@
 #include <fstream>
 #include "TriObject.h"
 #include <memory>
+#include <string.h>
 
 GeometryObj::GeometryObj(std::shared_ptr<Shape> s, const Material& mat)
 	: material(mat), shape(s)
@@ -34,19 +35,26 @@ bool GeometryObj::loadOBJ(const std::string& path, std::vector<std::unique_ptr<G
 
 	std::ifstream ifs;
 	ifs.open(path);
-	if(!ifs.is_open())
+	if (ifs.fail())
+	{
+		char* s;
+		_strerror_s(s, 80, "_strerror()");
+		std::cerr << "Error in loadOBJ: " << s;
+		std::flush(std::cerr);
 		return false;
+	}
 
 	int objectLineCounter = 0;
 	int vertexOffset = 0;
 	int uvOffset = 0;
-
+	bool hasMaterial = false;
 	while(getline(ifs, line))
 	{
 		objectLineCounter++;
 
 		if(line.find("mtllib") != std::string::npos)
 		{
+			hasMaterial = true;
 			int spacePos = line.find_first_of(' ');
 			materialLibPath = line.substr(spacePos + 1);
 		}
@@ -65,11 +73,17 @@ bool GeometryObj::loadOBJ(const std::string& path, std::vector<std::unique_ptr<G
 
 			//initialize material
 			Material material;
-			//generate mtl file path (in same directory as .obj, but named $materialLibPath
-			int lastSlash = path.find_last_of("/");
-			std::string mtlPath = path.substr(0, lastSlash + 1) + materialLibPath;
-			material.loadMTL(mtlPath, materialName);
-
+			if (hasMaterial)
+			{
+				//generate mtl file path (in same directory as .obj, but named $materialLibPath
+				int lastSlash = path.find_last_of("/");
+				std::string mtlPath = path.substr(0, lastSlash + 1) + materialLibPath;
+				material.loadMTL(mtlPath, materialName);
+			}
+			else
+			{
+				material.loadMTL(DEFAULT_MTL_PATH + DEFAULT_MTL_NAME, DEFAULT_MTL_NAME);
+			}
 			objectList->push_back(std::make_unique<GeometryObj>(triObject, material, objectName));
 		}
 	}
@@ -80,3 +94,6 @@ bool GeometryObj::loadOBJ(const std::string& path, std::vector<std::unique_ptr<G
 	ifs.close();
 	return true;
 }
+
+const std::string GeometryObj::DEFAULT_MTL_PATH = "C:/Projects/Raytracer/docs/models/";
+const std::string GeometryObj::DEFAULT_MTL_NAME = "dragon.mtl";

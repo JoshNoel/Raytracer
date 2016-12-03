@@ -191,20 +191,23 @@ bool TriObject::loadOBJ(std::string path, int startLine, std::string& materialNa
 			slashPos = line.find('/', slashPos + 1);
 			points[2] = (vertices.at(std::stoi(line.substr(spacePos + 1, slashPos)) - 1 - vertexOffset));
 
-			//import uv coordinate order
-			slashPos = line.find_first_of('/');
-			spacePos = line.find(' ', slashPos + 1);
-			//find vertex at the index given in the file ( vertices stored in vertex array)
-			points_uv[0] = (uvCoords.at(std::stoi(line.substr(slashPos + 1, spacePos)) - 1 - uvOffset));
+			if (hasUV)
+			{
+				//import uv coordinate order
+				slashPos = line.find_first_of('/');
+				spacePos = line.find(' ', slashPos + 1);
+				//find vertex at the index given in the file ( vertices stored in vertex array)
+				points_uv[0] = (uvCoords.at(std::stoi(line.substr(slashPos + 1, spacePos)) - 1 - uvOffset));
 
-			spacePos = line.find(' ', spacePos + 1);
-			slashPos = line.find('/', slashPos + 1);
-			points_uv[1] = (uvCoords.at(std::stoi(line.substr(slashPos + 1, spacePos)) - 1 - uvOffset));
+				spacePos = line.find(' ', spacePos + 1);
+				slashPos = line.find('/', slashPos + 1);
+				points_uv[1] = (uvCoords.at(std::stoi(line.substr(slashPos + 1, spacePos)) - 1 - uvOffset));
 
-			spacePos = line.find(' ', spacePos + 1);
-			slashPos = line.find('/', slashPos + 1);
-			points_uv[2] = (uvCoords.at(std::stoi(line.substr(slashPos + 1, spacePos)) - 1 - uvOffset));
-			//end import uv coordinate order
+				spacePos = line.find(' ', spacePos + 1);
+				slashPos = line.find('/', slashPos + 1);
+				points_uv[2] = (uvCoords.at(std::stoi(line.substr(slashPos + 1, spacePos)) - 1 - uvOffset));
+				//end import uv coordinate order
+			}
 
 			//create a bounding box for the imported triangle
 			BoundingBox bbox;

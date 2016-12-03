@@ -6,7 +6,6 @@
 #include "Light.h"
 #include "Plane.h"
 #include "Scene.h"
-#include "ThreadPool.h"
 #include <vector>
 #include <memory>
 #include <random>
@@ -17,9 +16,12 @@ class Renderer
 {
 public:
 	Renderer(const Scene* scene, Image* image);
-	~Renderer();
 
-	void render();
+	bool init();
+
+	//const to ensure threads can call
+	glm::vec3 renderPixel(int x , int y) const;
+	void writeImage(glm::vec3 color, int x, int y) const;
 
 	Image* image;
 	Camera camera;
@@ -37,9 +39,6 @@ private:
 	//returns whether a ray hits an object
 	bool hitsObject(Ray& ray, float& thit0, float& thit1) const;
 	bool hitsObject(Ray& ray) const;
-
-	//handles thread management
-	ThreadPool threadPool;
 
 	//used to generate random points on an area light to crate soft shadows
 	mutable std::minstd_rand rng;

@@ -55,13 +55,13 @@ public:
 		//average the results of the samples to determine visibililty of point to an area light
 			//1 = completly visible
 			//0 = completly in shadow
-	const int SHADOW_SAMPLES = 16;
+	const int SHADOW_SAMPLES = 1;
 	int SQRT_DIV2_SHADOW_SAMPLES;
 
 	//samples to cast per pixel
 		//also uses stratified random sampling (like with the area lights) within each pixel
 		//average color of the primary rays to get final color of the pixel
-	const int PRIMARY_SAMPLES = 4;
+	const int PRIMARY_SAMPLES = 1;
 private:
 
 	//Axis-aligned bounding box for the scene as a whole

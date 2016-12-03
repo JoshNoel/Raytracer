@@ -13,15 +13,11 @@ const int Renderer::NUM_THREADS = 8;
 
 Renderer::Renderer(const Scene* s, Image* i)
 	:image(i), camera(), scene(s), distributionX(0, std::nextafter(1.0f, FLT_MAX)),
-        distributionY(0, std::nextafter(1.0f, FLT_MAX)), rng(1), mutex(), pixelsRendered(0)
+        distributionY(0, std::nextafter(1.0f, FLT_MAX)), rng(1), pixelsRendered(0)
 {
 	//initialize random number generator for shadow sampling
 	std::random_device device;
 	rng.seed(device());
-}
-
-Renderer::~Renderer()
-{
 }
 
 /*
@@ -80,111 +76,49 @@ glm::vec3 reflect(glm::vec3 dir, glm::vec3 norm)
 	return glm::normalize(dir - (2 * glm::dot(dir, norm) * norm));
 }
 
-void Renderer::render()
+bool Renderer::init()
 {
-	if(image == nullptr) return;
-	if(scene->objectList.size() == 0) return;
+	if(image == nullptr) return false;
+	if(scene->objectList.size() == 0) return false;
 
 	camera.calculate(image->getAR());
 
-
-	for(int i = 0; i < image->width; i++)
-	{
-		for(int j = 0; j < image->height; j++)
-		{
-			threadPool.
-		}
-	}
-	///////////////////////////////////////////////////////////////////
-	int imageSegmentLength = int(std::floor(image->height / NUM_THREADS));
-
-	//assign threads vertical sections of image that they will render simultaneously
-	std::array<renderThread, NUM_THREADS> threadArray;
-	if(image->height % NUM_THREADS == 0)
-	{
-		for(int threadNum = 0; threadNum < NUM_THREADS; ++threadNum)
-		{
-			threadArray[threadNum].start = imageSegmentLength * threadNum;
-			threadArray[threadNum].end = (imageSegmentLength * threadNum) + imageSegmentLength;
-		}
-	}
-	else
-	{
-		for(int threadNum = 0; threadNum < NUM_THREADS; ++threadNum)
-		{
-			threadArray[threadNum].start = imageSegmentLength * threadNum;
-			threadArray[threadNum].end = (imageSegmentLength * threadNum) + imageSegmentLength;
-		}
-		threadArray[NUM_THREADS - 1].end += image->height % NUM_THREADS;
-	}
-
-	//execute threads
-	for(int threadNum = 0; threadNum < NUM_THREADS; ++threadNum)
-	{
-		//initialize thread image data
-		int height = threadArray[threadNum].end - threadArray[threadNum].start;
-		threadArray[threadNum].data = new glm::vec3[height * image->width];
-		//start thread
-		threadArray[threadNum].m_thread = std::thread(&Renderer::startThread, this, &threadArray[threadNum]);
-	}
-
-	//join threads so that the main loop waits for rendering to finish
-	for(int threadNum = 0; threadNum < NUM_THREADS; ++threadNum)
-	{
-		threadArray[threadNum].m_thread.join();
-	}
-
-	//copy image data from each thread to the actual image
-	for(int threadNum = 0; threadNum < NUM_THREADS; ++threadNum)
-	{
-		int height = threadArray[threadNum].end - threadArray[threadNum].start;
-		int start = threadArray[threadNum].start;
-		std::copy(&threadArray[threadNum].data[0], 
-			&threadArray[threadNum].data[height * image->width], 
-			&image->data[start * image->width]);
-	}
+	return true;
 }
 
 //Runs code for each tread to render its section of the image
-void Renderer::sendJob(renderThread* renderThread) const
+glm::vec3 Renderer::renderPixel(int pixelX, int pixelY) const
 {
-	int start = renderThread->start;
-	int end = renderThread->end;
 	int width = image->width;
 	int samples = scene->PRIMARY_SAMPLES;
-	for(int i = start; i < end; ++i)
+	glm::vec3 color;
+
+	for(int primarySample = 0; primarySample < samples; ++primarySample)
 	{
-		//traverse rows
-		for(int j = 0; j < width; ++j)
-		{
-			glm::vec3 color;
+		float x, y;
+		Ray primary;
+		//normalize x
+		x = (2.0f * (pixelX + distributionX(rng)) / image->width) - 1.0f;
+		//normalize y
+		y = 1.0f - (2.0f * (pixelY + distributionY(rng)) / image->height);
 
-			for(int primarySample = 0; primarySample < samples; ++primarySample)
-			{
-				float x, y;
-				x = y = 0;
-				Ray primary;
-				//normalize x
-				x = (2.0f * (j + distributionX(rng)) / image->width) - 1.0f;
-				//normalize y
-				y = 1.0f - (2.0f * (i + distributionY(rng)) / image->height);
+		primary.dir = x*camera.right + y*camera.up + camera.direction;
+		primary.dir = glm::normalize(primary.dir);
 
-				primary.dir = x*camera.right + y*camera.up + camera.direction;
-				primary.dir = glm::normalize(primary.dir);
+		//Check collision...generate shadow rays
+		primary.thit0 = camera.viewDistance;
 
-				//Check collision...generate shadow rays
-				primary.thit0 = camera.viewDistance;
-
-				float thit0, thit1;
-				color += glm::min(castRay(primary, thit0, thit1, 0), glm::vec3(255, 255, 255));
-			}
-			renderThread->data[(i-start)*width + j] = (color / float(samples));
-		}
+		float thit0, thit1;
+		color += glm::min(castRay(primary, thit0, thit1, 0), glm::vec3(255, 255, 255));
 	}
 
-	std::cout << " thread done\n";
+	return (color / float(samples));
 }
 
+void Renderer::writeImage(glm::vec3 color, int x, int y) const
+{
+	image->data[x + y*image->width] = color;
+}
 
 bool Renderer::hitsObject(Ray& ray, float& thit0, float& thit1) const
 {
