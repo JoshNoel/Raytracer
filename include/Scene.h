@@ -6,8 +6,9 @@
 #include "GeometryObj.h"
 #include "Node.h"
 #include "TriObject.h"
+#include "managed.h"
 
-class Scene
+class Scene : Managed
 {
 public:
 	Scene();
@@ -16,6 +17,9 @@ public:
 	//adds an object to the scene and sets its id
 	void addObject(std::unique_ptr<GeometryObj> o) 
 	{ 
+#ifdef USE_CUDA
+		//if using cuda,
+#endif
 		o->id = idCounter++;
 		objectList.push_back(std::move(o));
 	}
@@ -47,7 +51,7 @@ public:
 
 	int idCounter = 0;
 
-	const int MAX_RECURSION_DEPTH = 2;
+	static const int MAX_RECURSION_DEPTH = 2;
 
 	//samples to cast to an area light to determine shadow intensity
 		//if a ray doesn't intersect an object on the way to the light, the point is lit
@@ -55,13 +59,13 @@ public:
 		//average the results of the samples to determine visibililty of point to an area light
 			//1 = completly visible
 			//0 = completly in shadow
-	const int SHADOW_SAMPLES = 1;
+	static const int SHADOW_SAMPLES = 1;
 	int SQRT_DIV2_SHADOW_SAMPLES;
 
 	//samples to cast per pixel
 		//also uses stratified random sampling (like with the area lights) within each pixel
-		//average color of the primary rays to get final color of the pixel
-	const int PRIMARY_SAMPLES = 1;
+		//average color of the primary rays to get final color of the pixel00
+	static const int PRIMARY_SAMPLES = 1;
 private:
 
 	//Axis-aligned bounding box for the scene as a whole

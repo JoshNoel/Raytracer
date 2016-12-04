@@ -2,11 +2,10 @@
 #include <string>
 #include <vector>
 #include "glm/glm.hpp"
-#define USE_CUDA
-
 #include "CudaDef.h"
+#include "managed.h"
 
-class Image
+class Image : Managed
 {
 public:
 	Image(int w, int h);

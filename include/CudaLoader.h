@@ -25,6 +25,8 @@ private:
 	//device pointers
 	glm::vec3* pd_image;
 	Scene* pd_scene;
+
+	//TODO: Should create structure to hold data in a more efficient manner
 };
 
 #endif

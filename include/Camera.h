@@ -1,7 +1,8 @@
 #pragma once
 #include "glm/glm.hpp"
+#include "managed.h"
 
-class Camera
+class Camera : Managed
 {
 public:
 	Camera();

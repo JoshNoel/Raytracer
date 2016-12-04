@@ -5,14 +5,17 @@
 #include "GeometryObj.h"
 #include "glm/gtx/rotate_vector.hpp"
 #include <iterator>
-
+#include "CudaDef.h"
+#include <curand.h>
+#include <curand_kernel.h>
+#include <unistd.h>
 
 
 const float Renderer::SHADOW_RAY_LENGTH = 50.0f;
 const int Renderer::NUM_THREADS = 8;
 
-Renderer::Renderer(const Scene* s, Image* i)
-	:image(i), camera(), scene(s), distributionX(0, std::nextafter(1.0f, FLT_MAX)),
+Renderer::Renderer(const Scene* s, Image* i, Camera* cam)
+	:image(i), camera(cam), scene(s), distributionX(0, std::nextafter(1.0f, FLT_MAX)),
         distributionY(0, std::nextafter(1.0f, FLT_MAX)), rng(1), pixelsRendered(0)
 {
 	//initialize random number generator for shadow sampling
@@ -81,9 +84,73 @@ bool Renderer::init()
 	if(image == nullptr) return false;
 	if(scene->objectList.size() == 0) return false;
 
-	camera.calculate(image->getAR());
+	camera->calculate(image->getAR());
 
 	return true;
+}
+
+
+CUDA_GLOBAL void renderKernel(unsigned int seed, curandState_t* states) {
+	//get assigned pixel
+	//for now each thread is 1 pixel
+	pixelX = blockIdx.x * blockDim.x + threadIdx.x;
+	pixelY = blockIdx.y * blockDim.y + threadIdx.y;
+
+	//init curand for later use in sampling
+	curandState_t state;
+	curand_init(seed, blockIdx.x, 0, &states[blockIdx.x * blockDim.x + blockIdx.y]);
+
+	//create primary ray
+		//needs ray*, cuRAND*, camera*, image*
+	int width = image->width;
+	int samples = scene::PRIMARY_SAMPLES;
+	glm::vec3 color;
+
+	for(int primarySample = 0; primarySample < samples; ++primarySample)
+	{
+		float x, y;
+		Ray primary;
+		//normalize x
+		x = (2.0f * (pixelX + curand_uniform(blockIdx.x * blockDim.x + blockIdx.y])*2-1) / image->width) - 1.0f;
+		//normalize y
+		y = 1.0f - (2.0f * (pixelY + curand_uniform(blockIdx.x * blockDim.x + blockIdx.y])*2-1) / image->height);
+
+		primary.dir = x*camera->right + y*camera->up + camera->direction;
+		primary.dir = glm::normalize(primary.dir);
+
+		//Check collision...generate shadow rays
+		primary.thit0 = camera->viewDistance;
+
+		float thit0, thit1;
+		color += glm::min(castRay(primary, thit0, thit1, 0), glm::vec3(255, 255, 255));
+	}
+
+	return (color / float(samples));
+
+	//cast ray
+		//needs scene.bg, ray, scene.lights, scene.objects,
+}
+
+void Renderer::renderCuda() {
+	int BLOCK_DIM_SQ = BLOCK_DIM*BLOCK_DIM;
+	//calculate x and y dims of kernel based on block dims
+	int numBlocksX = (image->width+BLOCK_DIM-1) / BLOCK_DIM;
+	int numBlocksY = (image->height+BLOCK_DIM-1) / BLOCK_DIM;
+
+	std::cout << "numBlocksX: " << numBlocksX << "\t numBlocksY: " << numBlocksY << std::endl;
+
+	dim3 blockDim(BLOCK_DIM, BLOCK_DIM);
+	dim3 kernelDim(numBlocksX, numBlocksY);
+
+	//curand
+	curandState_t* states;
+	cudaMalloc((void**) &states, numBlocksX*numBlocksY);
+
+
+	renderKernel<<<kernelDim, blockDim>>>(time(0));
+	CUDA_CHECK_ERROR(cudaDeviceSynchronize());
+
+	cudaFree(states);
 }
 
 //Runs code for each tread to render its section of the image
@@ -102,11 +169,11 @@ glm::vec3 Renderer::renderPixel(int pixelX, int pixelY) const
 		//normalize y
 		y = 1.0f - (2.0f * (pixelY + distributionY(rng)) / image->height);
 
-		primary.dir = x*camera.right + y*camera.up + camera.direction;
+		primary.dir = x*camera->right + y*camera->up + camera->direction;
 		primary.dir = glm::normalize(primary.dir);
 
 		//Check collision...generate shadow rays
-		primary.thit0 = camera.viewDistance;
+		primary.thit0 = camera->viewDistance;
 
 		float thit0, thit1;
 		color += glm::min(castRay(primary, thit0, thit1, 0), glm::vec3(255, 255, 255));
@@ -120,7 +187,7 @@ void Renderer::writeImage(glm::vec3 color, int x, int y) const
 	image->data[x + y*image->width] = color;
 }
 
-bool Renderer::hitsObject(Ray& ray, float& thit0, float& thit1) const
+CUDA_DEVICE CUDA_HOST bool Renderer::hitsObject(Ray& ray, float& thit0, float& thit1) const
 {
 	bool hit = false;
 	for(unsigned s = 0; s < scene->objectList.size(); ++s)
@@ -151,7 +218,7 @@ bool Renderer::hitsObject(Ray& ray, float& thit0, float& thit1) const
 	return hit;
 }
 
-bool Renderer::hitsObject(Ray& ray) const
+CUDA_DEVICE CUDA_HOST bool Renderer::hitsObject(Ray& ray) const
 {
 	float x, y;
 	x =  _INFINITY;
@@ -161,7 +228,7 @@ bool Renderer::hitsObject(Ray& ray) const
 }
 
 
-glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) const
+CUDA_DEVICE CUDA_HOST glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) const
 {
 	glm::vec3 finalCol = glm::vec3(0,0,0);
 
@@ -182,7 +249,7 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 			shadowRay.pos = ray.pos + ray.dir * ray.thit0;
 
 			glm::vec3 normal = ray.hitObject->getShape()->calcWorldIntersectionNormal(ray);
-			normal = glm::normalize(normal);
+			normal =  glm::normalize(normal);
 
 			for(auto light : scene->lightList)
 			{
@@ -322,7 +389,7 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 						//Blinn-Phong shading model specular component
 						//specularComponent = specColor * specCoef * lightIntensity * (normal•bisector)ⁿ
 						//	ⁿ represents shininess of surface
-						glm::vec3 view = glm::normalize(camera.position - shadowRay.pos);
+						glm::vec3 view = glm::normalize(camera->position - shadowRay.pos);
 						//bisector ray calculation
 						glm::vec3 bisector = glm::normalize(view + shadowRay.dir);
 						glm::vec3 r = reflect(-shadowRay.dir, normal);
@@ -444,7 +511,7 @@ glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, int depth) con
 	return finalCol;
 }
 
-glm::vec3 Renderer::castRay(Ray& ray, int depth) const
+CUDA_DEVICE CUDA_HOST glm::vec3 Renderer::castRay(Ray& ray, int depth) const
 {
 	float x, y;
 	return castRay(ray, x, y, depth);

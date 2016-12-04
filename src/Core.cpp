@@ -14,6 +14,7 @@ void Core::render()
 {
 #ifdef USE_CUDA
 	//if using cuda launch kernel
+	renderer->renderCuda();
 
 #else
 	for(int i = 0; i < renderer->image->width; i++)

@@ -1,3 +1,4 @@
+#define GLM_FORCE_CUDA
 #include "Renderer.h"
 #include "Plane.h"
 #include "Sphere.h"
@@ -11,13 +12,14 @@
 int main()
 {
 	//create image and set output path
-	Image image(800, 800);
-        std::string outputImagePath = "/home/josh/Projects/cuda/raytracer/docs/examples/test2.png";
+	Image image = new Image(800, 800);
+    std::string outputImagePath = "/home/josh/Projects/cuda/raytracer/docs/examples/test2.png";
 
+    Camera camera = new Camera();
 
 	//create scene and set background color or image
-	Scene scene;
-	scene.bgColor = glm::vec3(10, 10, 10);
+	Scene scene = new Scene();
+	scene->bgColor = glm::vec3(10, 10, 10);
 
 	//create plane shape (ground)
 	std::shared_ptr<Plane> planeShape = std::make_shared<Plane>(glm::vec3(0, -1.5, 0), 0, 0, 0, glm::vec2(150,150));
@@ -30,7 +32,7 @@ int main()
 
 	//create plane object that holds shape and material
 	std::unique_ptr<GeometryObj> plane = std::make_unique<GeometryObj>(planeShape, planeMat);
-	scene.addObject(std::move(plane));
+	scene->addObject(std::move(plane));
 
 	//create list of objects(meshes and materials) from .obj file, and add objects to the scene
 	std::vector<std::unique_ptr<GeometryObj>> objectList;
@@ -39,7 +41,7 @@ int main()
 	{
 		for(unsigned int i = 0; i < objectList.size(); ++i)
 		{
-			scene.addObject(std::move(objectList[i]));
+			scene->addObject(std::move(objectList[i]));
 		}
 	}
 
@@ -56,16 +58,16 @@ int main()
 	Plane lightPlane = Plane(light.pos, degToRad(-120.0f), degToRad(0.0f), 0.0f, glm::vec2(15.0f, 15.0f));
 	light.createShape(lightPlane);
 	light.isAreaLight = true;
-	scene.addLight(light);
+	scene->addLight(light);
 
 	//create renderer with the initialized scene and image pointers
-	Renderer renderer(&scene, &image);
+	Renderer renderer(scene, image, camera);
 	//create core to handle assigning of rendering tasks
 	Core core(&renderer);
 
 	//sets ambient lighting of the scene
 		//minimum possible color of an unlit point
-	scene.setAmbient(glm::vec3(255, 255, 255), 0.1f);
+	scene->setAmbient(glm::vec3(255, 255, 255), 0.1f);
 
 	//start logger, and then tell core to start rendering
 	Logger::startClock();
@@ -76,6 +78,8 @@ int main()
 	image.outputPNG(outputImagePath);
 	Logger::printLog("./docs/logs/Timing_Log_example.txt", "Example");
 
+	delete image;
+	delete camera;
 	return 0;
 }
 

@@ -9,13 +9,32 @@ static inline void cudaErrorCheck(cudaError_t error, const char* file, unsigned 
 		throw std::runtime_error(errorString);
 	}
 }
-
-#ifdef USE_CUDA
+#if defined(USE_CUDA) && !defined(BLOCK_SIZE)
+	#define BLOCK_SIZE 1024
+#endif
+#if defined(USE_CUDA) && !defined(CUDA_CONST)
 	#define CUDA_CONST __constant__
 	#else
 	#define CUDA_CONST
+
 #endif
 
-#undef CREATE_CUDA_DEF
+#if defined(USE_CUDA) && !defined(CUDA_HOST)
+	#define CUDA_HOST __host__
+	#else
+	#define CUDA_HOST
+#endif
+
+#if defined(USE_CUDA) && !defined(CUDA_DEVICE)
+	#define CUDA_DEVICE __device__
+	#else
+	#define CUDA_DEVICE
+#endif
+
+#if defined(USE_CUDA) && !defined(CUDA_GLOBAL)
+	#define CUDA_GLOBAL __constant__
+	#else
+	#define CUDA_GLOBAL
+#endif
 
 #endif

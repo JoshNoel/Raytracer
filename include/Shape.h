@@ -1,12 +1,13 @@
 #pragma once
 #include "Ray.h"
 #include "BoundingBox.h"
+#include "managed.h"
 
 class GeometryObj;
 
 //Describes shape that is a part of a GeometryObject
 	//abstract class
-class Shape
+class Shape : Managed
 {
 public:
 
