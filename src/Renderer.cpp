@@ -105,9 +105,9 @@ CUDA_GLOBAL void kernel(Renderer* renderer, curandState_t* states) {
 		{
 			Ray primary;
 			//normalize xdevice_vector
-			x = (2.0f * float(pixelX)/renderer->image->width) - 1.0f;//(2.0f * (pixelX + curand_uniform(&states[blockIdx.x *blockDim.x + blockIdx.y])*2-1) / renderer->image->width) - 1.0f;
+			x = (2.0f * (pixelX + curand_uniform(&states[blockIdx.x *blockDim.x + blockIdx.y])*2-1) / renderer->image->width) - 1.0f;
 			//normalize y
-			y = (2.0f * float(pixelY)/renderer->image->height) - 1.0f;//1.0f - (2.0f * (pixelY + curand_uniform(&states[blockIdx.x*blockDim.x + blockIdx.y])*2-1) / renderer->image->height);
+			y = 1.0f - (2.0f * (pixelY + curand_uniform(&states[blockIdx.x*blockDim.x + blockIdx.y])*2-1) / renderer->image->height);
 
 			primary.dir = x*renderer->camera->right + y*renderer->camera->up + renderer->camera->direction;
 			primary.dir = glm::normalize(primary.dir);
@@ -116,9 +116,13 @@ CUDA_GLOBAL void kernel(Renderer* renderer, curandState_t* states) {
 			primary.thit0 = renderer->camera->viewDistance;
 
 			float thit0, thit1;
-			color += glm::min(renderer->castRay(primary, thit0, thit1, 0), glm::vec3(255, 255, 255));
+			
+			glm::vec3 temp_color = renderer->castRay(primary, thit0, thit1, 0);
+			temp_color /= float(samples)/5.0f;
+			color += temp_color;
 		}
-		(*renderer->image)[pixelX + (renderer->image->height-1 - pixelY)*renderer->image->width] = color;
+		glm::clamp(color, glm::vec3(0), glm::vec3(255));
+		(*renderer->image)[pixelX + (pixelY)*renderer->image->width] = color;
 
 		//cast ray
 			//needs scene.bg, ray, scene.lights, scene.objects,
@@ -286,6 +290,7 @@ CUDA_DEVICE glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, in
 
 			for(unsigned i = 0; i < lightListSize; i++)
 			{
+				glm::vec3 colorFromLight = glm::vec3(0, 0, 0);
 #if (defined(__CUDA_ARCH__)) && (__CUDA_ARCH__ > 0)
 				Light* light = sceneGpuData->lightList[i];
 #else
@@ -428,12 +433,15 @@ CUDA_DEVICE glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, in
 					}
 					case Light::DIRECTIONAL:
 					{
-						lightVisibility = 1.0f;
 						shadowRay.dir = -light->dir;
-						shadowRay.dir = glm::normalize(shadowRay.dir);
-						lightFalloffIntensity = (light->intensity);
-						if(glm::dot(normal, shadowRay.dir) > 0)
+						float dot = glm::dot(normal, shadowRay.dir);
+						if (dot > 0)
+						{
 							inShadow = false;
+							lightVisibility = dot;
+							shadowRay.dir = glm::normalize(shadowRay.dir);
+							lightFalloffIntensity = (light->intensity);
+						}
 						break;
 					}
 				}
@@ -448,7 +456,7 @@ CUDA_DEVICE glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, in
 						//dot product must be positive or else the light has no influence
 						float dot = glm::dot(normal, shadowRay.dir);
 						if(dot > 0.0f)
-							finalCol += dot * material.sample(ray, ray.thit0) * material.diffuseCoef;
+							colorFromLight += dot * material.sample(ray, ray.thit0) * material.diffuseCoef;
 					}
 
 					if(material.type & Material::BPHONG_SPECULAR)
@@ -464,10 +472,10 @@ CUDA_DEVICE glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, in
 						if(dot > 0.0f)
 						{
 #ifdef USE_CUDA
-							finalCol += material.specularColor * material.specCoef
+							colorFromLight += material.specularColor * material.specCoef
 															* pow(dot, material.shininess);
 #else
-							finalCol += material.specularColor * material.specCoef
+							colorFromLight += material.specularColor * material.specCoef
 								* std::pow(dot, material.shininess);
 #endif
 						}
@@ -555,7 +563,7 @@ CUDA_DEVICE glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, in
 								if(glm::dot(refractionRay.dir, norm) > 0.0f)
 								{
 									refractionRay.pos += norm * RAY_EPSILON;
-									finalCol += castRay(refractionRay, depth + 1) * transmitRatio;
+									colorFromLight += castRay(refractionRay, depth + 1) * transmitRatio;
 								}
 							}
 
@@ -563,13 +571,15 @@ CUDA_DEVICE glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, in
 							reflectionRay.dir = reflect(reflectionRay.pos - ray.pos, normal);
 							reflectionRay.pos = shadowRay.pos;
 							reflectionRay.pos += normal * RAY_EPSILON;
-							finalCol += castRay(reflectionRay, depth + 1) * reflectionRatio;
+							colorFromLight += castRay(reflectionRay, depth + 1) * reflectionRatio;
 						}
 					}
 					//Add visibility (how much in shadow the point is) and falloff coefficients to the final color calculation
-					finalCol *= lightVisibility * lightFalloffIntensity;
+					colorFromLight *= lightVisibility * lightFalloffIntensity;
+					finalCol += colorFromLight;
 				}
 			}
+
 
 			if(ray.hitObject->getMaterial().type & Material::MIRROR)
 			{			
@@ -586,10 +596,12 @@ CUDA_DEVICE glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, in
 				float thit0, thit1;
 				finalCol += castRay(reflectionRay, thit0, thit1, depth + 1) * (1.0f / (float(depth) + 1.0f)) * ray.hitObject->getMaterial().reflectivity;
 			}	
+
+			//add ambient light (no point can be completely black to add realism due to indirect lighting effects)
+			finalCol += + ambientColor * ambientIntensity;
 		}
 
-		//add ambient light (no point can be completely black to add realism due to indirect lighting effects)
-		finalCol += ambientColor * ambientIntensity;
+
 	}
 	return finalCol;
 }

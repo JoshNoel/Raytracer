@@ -14,3 +14,11 @@ CUDA Shape*
 	Returning references would make codebase much more verbose as once can no longer treat returned pointer references as anonymous shape types
 		This would be solved, however, if one used Shape** as once can just cast these to their respective pointer types (i.e. Shape** -> Triangle**)
 			static_cast and reinterpret_cast return new pointer to same address (rvalue), so cannot do conversion like this: Triangle*&->Shape*& or vice-versa
+			
+TODO:
+Optimize kernels
+fix object file loading (fbx?)
+	need less space during runtime
+	faster read access
+create scene file format rather than altering main
+fix memory issues (currently small obj's take up gigs of memory)

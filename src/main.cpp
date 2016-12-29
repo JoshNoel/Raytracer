@@ -9,12 +9,12 @@
 #include "helper/array.h"
 #include "CudaLoader.h"
 
-///In current setup it will render code_example.png///
+///In current setup it will render CUDA_test2.png///
 int main() {
 	//temporary hard-coded values to ensure we don't run out of memory
 	//TODO: dynamically determine space needed
 	size_t stackSize = 2e4; //20kb stack size
-	size_t heapSize = 4e6; //4gb heap size
+	size_t heapSize = 4e7;
 	cudaDeviceSetLimit(cudaLimitStackSize, stackSize);
 	cudaDeviceSetLimit(cudaLimitMallocHeapSize, heapSize);
 	size_t sSize;
@@ -24,14 +24,15 @@ int main() {
 	std::cout << "Stack Size: " << sSize << ", Heap Size: " << hSize << std::endl;
 
 	//create image and set output path
-	Image* image = new Image(800, 800);
-    std::string outputImagePath = "F:\\Projects\\cuda\\raytracer\\docs\\examples\\CUDA_test.png";
+	Image* image = new Image(1920, 1080);
+    std::string outputImagePath = "F:\\Projects\\cuda\\raytracer\\docs\\examples\\CUDA_test2.png";
 
     Camera* camera = new Camera();
+	camera->setPosition(glm::vec3(0, 0, 1));
 
 	//create scene and set background color or image
 	Scene* scene = new Scene();
-	scene->setBgColor(glm::vec3(10, 10, 10));
+	scene->setBgColor(glm::vec3(0, 0, 0));
 
 
 	//need specialized loading functionality if using cuda
@@ -50,7 +51,7 @@ int main() {
 	std::vector<std::unique_ptr<GeometryObj>> objectList;
 
 
-	Plane** planeShape = cudaLoader.loadShape<Plane>(glm::vec3(0, -2, -2), 0.0f, 0.0f, 0.0f, glm::vec2(100,100));
+	Plane** planeShape = cudaLoader.loadShape<Plane>(glm::vec3(0, -2, -2), 0.0f, 0.0f, 0.0f, glm::vec2(10,10));
 
 	//create plane's material
 	Material planeMat;
@@ -61,7 +62,7 @@ int main() {
 	//create plane object that holds shape and material
 	objectList.push_back(std::make_unique<GeometryObj>(planeShape, planeMat, "Plane"));
 
-	Sphere** sphereShape = cudaLoader.loadShape<Sphere>(glm::vec3(-1, -1, -6), 1);
+	Sphere** sphereShape = cudaLoader.loadShape<Sphere>(glm::vec3(-2.75, -1, -6), 1);
 	Material sphereMat;
 	sphereMat.color = glm::vec3(15, 175, 200);
 	sphereMat.diffuseCoef = 0.8f;
@@ -74,22 +75,31 @@ int main() {
 	//area light is a plane
 	//area lights allow for soft shadows because
 	//intensity of the shadow depends on area of light that is visible to the point
-	glm::vec3 lightpos = glm::vec3(0, 5.0f, 0);
-	Plane** lightPlane = cudaLoader.loadShape<Plane>(lightpos, degToRad(180.0f), degToRad(0.0f), 0.0f, glm::vec2(15.0f, 15.0f));
+	glm::vec3 lightpos = glm::vec3(2, 6.0f, -6);
+	Plane** lightPlane = cudaLoader.loadShape<Plane>(lightpos, degToRad(100.0f), degToRad(0.0f), degToRad(0.0f), glm::vec2(10.0f, 10.0f));
 	std::unique_ptr<Light> light = std::make_unique<Light>();
 	light->type = Light::POINT;
-	//light->calcDirection(-45.0f, 0.0f, 0.0f);
+	//light->calcDirection(-45.0f, 0.0f, 0.0f);B
 	light->pos = lightpos;
 	light->color = glm::vec3(255, 197, 143);
-	light->intensity = 100.0f;
+	light->intensity = 10.0f;
 	light->setShape(lightPlane);
 	light->isAreaLight = true;
 	scene->addLight(light.get());
 
+	std::unique_ptr<Light> light_2 = std::make_unique<Light>();
+	light_2->type = Light::POINT;
+	light_2->color = glm::vec3(121, 169, 247);
+	light_2->intensity = 3.0f;
+	light_2->pos = glm::vec3(0.0f, 0.2f, 1.0f);
+	scene->addLight(light_2.get());
+
 
 	//create list of objects(meshes and materials) from .obj file, and add objects to the scene
 	bool flipNormals = false;
-	GeometryObj::loadOBJ(cudaLoader, "F:\\Projects\\cuda\\raytracer\\docs\\models\\icosphere.obj", &objectList, glm::vec3(1, -1, -6), flipNormals);
+	GeometryObj::loadOBJ(cudaLoader, "F:\\Projects\\cuda\\raytracer\\docs\\models\\icosphere.obj", &objectList, glm::vec3(3, -1, -6), flipNormals);
+	GeometryObj::loadOBJ(cudaLoader, "F:\\Projects\\cuda\\raytracer\\docs\\models\\box2.obj", &objectList, glm::vec3(0, -.7, -6.2), flipNormals);
+
 
 	for (unsigned int i = 0; i < objectList.size(); ++i)
 	{
@@ -107,7 +117,7 @@ int main() {
 
 	//sets ambient lighting of the scene
 		//minimum possible color of an unlit point
-	scene->setAmbient(glm::vec3(255, 255, 255), 0.1f);
+	scene->setAmbient(glm::vec3(255, 255, 255), 0.01f);
 
 	//start logger, and then tell core to start rendering
 	Logger::startClock();

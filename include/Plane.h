@@ -88,7 +88,7 @@ public:
 			data->position = params.getPosition();
 			data->xAngle = params.getXAngle();
 			data->yAngle = params.getYAngle();
-			data->zAngle = params.getXAngle();
+			data->zAngle = params.getZAngle();
 			data->dimensions = params.getDimensions();
 			num_params = params.num_params;
 		}

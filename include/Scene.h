@@ -152,14 +152,14 @@ public:
 			//1 = completly visible
 			//0 = completly in shadow
 	//static const int host variable (and float if not on windows) can be accessed directly by device
-	static const int SHADOW_SAMPLES = 16;
+	static const int SHADOW_SAMPLES = 32;
 	int SQRT_DIV2_SHADOW_SAMPLES;
 
 	//samples to cast per pixel
 		//also uses stratified random sampling (like with the area lights) within each pixel
 		//average color of the primary rays to get final color of the pixel
 	//static const int host variable (and float if not on windows) can be accessed directly by device
-	static const int PRIMARY_SAMPLES = 1;
+	static const int PRIMARY_SAMPLES = 16;
 
 
 

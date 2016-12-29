@@ -25,12 +25,6 @@ void Plane::setProperties(float xAngle, float yAngle, float zAngle, glm::vec2 di
 	//Calculate U,V,N vectors representing the sides and normal of the triangle
 	glm::vec3 tempNorm(0.0f, 1.0f, 0.0f);
 	tempNorm = glm::rotateX(tempNorm, xAngle);
-	float x = cosf(xAngle);
-	glm::vec3 r;
-	r.x = tempNorm.x;
-	r.y = tempNorm.y * cosf(xAngle) - tempNorm.z * sinf(xAngle);
-	r.z = tempNorm.y * sinf(xAngle) + tempNorm.z * cosf(xAngle);
-	tempNorm = r;
 	tempNorm = glm::rotateY(tempNorm, yAngle);
 	tempNorm = glm::rotateZ(tempNorm, zAngle);
 	this->normal = glm::normalize(tempNorm);
