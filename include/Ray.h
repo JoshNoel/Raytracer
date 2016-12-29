@@ -1,4 +1,5 @@
 #pragma once
+#include "CudaDef.h"
 #include "glm/glm.hpp"
 
 class GeometryObj;
@@ -9,9 +10,9 @@ class Ray
 	*Ray = position + direction (t)
 	*/
 public:
-	Ray();
-	Ray(glm::vec3, glm::vec3);
-	~Ray();
+	CUDA_HOST CUDA_DEVICE Ray();
+	CUDA_HOST CUDA_DEVICE Ray(glm::vec3, glm::vec3);
+	CUDA_HOST CUDA_DEVICE ~Ray();
 
 	glm::vec3 pos;
 	glm::vec3 dir;

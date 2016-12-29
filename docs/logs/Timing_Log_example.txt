@@ -46,3 +46,1111 @@ Render Time: 41.2515
 Example: DEBUG
 
 Render Time: 27.485
+===========================
+Example: DEBUG
+
+Render Time: 0.00370596
+===========================
+Example: DEBUG
+
+Render Time: 0.00359042
+===========================
+Example: DEBUG
+
+Render Time: 0.0026374
+===========================
+Example: DEBUG
+
+Render Time: 0.00331743
+===========================
+Example: DEBUG
+
+Render Time: 0.00333253
+===========================
+Example: DEBUG
+
+Render Time: 0.00256075
+===========================
+Example: DEBUG
+
+Render Time: 0.0025415
+===========================
+Example: DEBUG
+
+Render Time: 0.00273255
+===========================
+Example: DEBUG
+
+Render Time: 0.00299082
+===========================
+Example: DEBUG
+
+Render Time: 0.00309767
+===========================
+Example: DEBUG
+
+Render Time: 0.00433312
+===========================
+Example: DEBUG
+
+Render Time: 0.00332875
+===========================
+Example: DEBUG
+
+Render Time: 1.1519
+===========================
+Example: DEBUG
+
+Render Time: 1.15529
+===========================
+Example: DEBUG
+
+Render Time: 1.1556
+===========================
+Example: DEBUG
+
+Render Time: 1.16771
+===========================
+Example: DEBUG
+
+Render Time: 1.15584
+===========================
+Example: DEBUG
+
+Render Time: 1.15405
+===========================
+Example: DEBUG
+
+Render Time: 0.0308664
+===========================
+Example: DEBUG
+
+Render Time: 0.0293591
+===========================
+Example: DEBUG
+
+Render Time: 1.17803
+===========================
+Example: DEBUG
+
+Render Time: 1.17763
+===========================
+Example: DEBUG
+
+Render Time: 1.17723
+===========================
+Example: DEBUG
+
+Render Time: 1.17636
+===========================
+Example: DEBUG
+
+Render Time: 1.17613
+===========================
+Example: DEBUG
+
+Render Time: 1.18271
+===========================
+Example: DEBUG
+
+Render Time: 1.17848
+===========================
+Example: DEBUG
+
+Render Time: 1.17803
+===========================
+Example: DEBUG
+
+Render Time: 1.17934
+===========================
+Example: DEBUG
+
+Render Time: 1.17321
+===========================
+Example: DEBUG
+
+Render Time: 1.17443
+===========================
+Example: DEBUG
+
+Render Time: 1.17909
+===========================
+Example: DEBUG
+
+Render Time: 1.17695
+===========================
+Example: DEBUG
+
+Render Time: 1.17836
+===========================
+Example: DEBUG
+
+Render Time: 1.17705
+===========================
+Example: DEBUG
+
+Render Time: 1.174
+===========================
+Example: DEBUG
+
+Render Time: 1.17582
+===========================
+Example: DEBUG
+
+Render Time: 1.17558
+===========================
+Example: DEBUG
+
+Render Time: 1.17439
+===========================
+Example: DEBUG
+
+Render Time: 1.17803
+===========================
+Example: DEBUG
+
+Render Time: 1.19619
+===========================
+Example: DEBUG
+
+Render Time: 1.20103
+===========================
+Example: DEBUG
+
+Render Time: 1.19771
+===========================
+Example: DEBUG
+
+Render Time: 0.0317998
+===========================
+Example: DEBUG
+
+Render Time: 0.0331727
+===========================
+Example: DEBUG
+
+Render Time: 1.22241
+===========================
+Example: DEBUG
+
+Render Time: 1.22035
+===========================
+Example: DEBUG
+
+Render Time: 0.0324111
+===========================
+Example: DEBUG
+
+Render Time: 1.21448
+===========================
+Example: DEBUG
+
+Render Time: 0.234237
+===========================
+Example: DEBUG
+
+Render Time: 0.224787
+===========================
+Example: DEBUG
+
+Render Time: 0.225329
+===========================
+Example: DEBUG
+
+Render Time: 0.0334956
+===========================
+Example: DEBUG
+
+Render Time: 1.10778
+===========================
+Example: DEBUG
+
+Render Time: 1.10767
+===========================
+Example: DEBUG
+
+Render Time: 0.0251673
+===========================
+Example: DEBUG
+
+Render Time: 0.0265681
+===========================
+Example: DEBUG
+
+Render Time: 0.0324293
+===========================
+Example: DEBUG
+
+Render Time: 0.0327823
+===========================
+Example: DEBUG
+
+Render Time: 0.00161227
+===========================
+Example: DEBUG
+
+Render Time: 0.00142273
+===========================
+Example: DEBUG
+
+Render Time: 0.00155866
+===========================
+Example: DEBUG
+
+Render Time: 0.0020144
+===========================
+Example: DEBUG
+
+Render Time: 0.00258794
+===========================
+Example: DEBUG
+
+Render Time: 0.00212427
+===========================
+Example: DEBUG
+
+Render Time: 0.00207254
+===========================
+Example: DEBUG
+
+Render Time: 0.00181163
+===========================
+Example: DEBUG
+
+Render Time: 1.1997
+===========================
+Example: DEBUG
+
+Render Time: 0.0299784
+===========================
+Example: DEBUG
+
+Render Time: 0.0303919
+===========================
+Example: DEBUG
+
+Render Time: 0.0306222
+===========================
+Example: DEBUG
+
+Render Time: 0.0297205
+===========================
+Example: DEBUG
+
+Render Time: 0.0299573
+===========================
+Example: DEBUG
+
+Render Time: 0.0304916
+===========================
+Example: DEBUG
+
+Render Time: 0.0325936
+===========================
+Example: DEBUG
+
+Render Time: 0.0293498
+===========================
+Example: DEBUG
+
+Render Time: 0.0284908
+===========================
+Example: DEBUG
+
+Render Time: 0.028362
+===========================
+Example: DEBUG
+
+Render Time: 0.0274573
+===========================
+Example: DEBUG
+
+Render Time: 0.0320868
+===========================
+Example: DEBUG
+
+Render Time: 1.21777
+===========================
+Example: DEBUG
+
+Render Time: 1.21814
+===========================
+Example: DEBUG
+
+Render Time: 1.218
+===========================
+Example: DEBUG
+
+Render Time: 1.19618
+===========================
+Example: DEBUG
+
+Render Time: 1.19259
+===========================
+Example: DEBUG
+
+Render Time: 1.19439
+===========================
+Example: DEBUG
+
+Render Time: 1.19612
+===========================
+Example: DEBUG
+
+Render Time: 1.21314
+===========================
+Example: DEBUG
+
+Render Time: 23.8225
+===========================
+Example: DEBUG
+
+Render Time: 1.21996
+===========================
+Example: DEBUG
+
+Render Time: 1.21637
+===========================
+Example: DEBUG
+
+Render Time: 1.21564
+===========================
+Example: DEBUG
+
+Render Time: 1.21435
+===========================
+Example: DEBUG
+
+Render Time: 1.21661
+===========================
+Example: DEBUG
+
+Render Time: 1.15113
+===========================
+Example: DEBUG
+
+Render Time: 1.15551
+===========================
+Example: DEBUG
+
+Render Time: 1.15382
+===========================
+Example: DEBUG
+
+Render Time: 1.17684
+===========================
+Example: DEBUG
+
+Render Time: 1.14594
+===========================
+Example: DEBUG
+
+Render Time: 1.13189
+===========================
+Example: DEBUG
+
+Render Time: 1.13155
+===========================
+Example: DEBUG
+
+Render Time: 1.17957
+===========================
+Example: DEBUG
+
+Render Time: 1.1265
+===========================
+Example: DEBUG
+
+Render Time: 1.13077
+===========================
+Example: DEBUG
+
+Render Time: 1.12578
+===========================
+Example: DEBUG
+
+Render Time: 1.12748
+===========================
+Example: DEBUG
+
+Render Time: 1.12533
+===========================
+Example: DEBUG
+
+Render Time: 1.12714
+===========================
+Example: DEBUG
+
+Render Time: 1.11821
+===========================
+Example: DEBUG
+
+Render Time: 1.12752
+===========================
+Example: DEBUG
+
+Render Time: 1.12525
+===========================
+Example: DEBUG
+
+Render Time: 1.12833
+===========================
+Example: DEBUG
+
+Render Time: 1.12963
+===========================
+Example: DEBUG
+
+Render Time: 1.12739
+===========================
+Example: DEBUG
+
+Render Time: 1.12513
+===========================
+Example: DEBUG
+
+Render Time: 1.12546
+===========================
+Example: DEBUG
+
+Render Time: 1.11515
+===========================
+Example: DEBUG
+
+Render Time: 1.11757
+===========================
+Example: DEBUG
+
+Render Time: 1.12706
+===========================
+Example: DEBUG
+
+Render Time: 1.12332
+===========================
+Example: DEBUG
+
+Render Time: 1.12108
+===========================
+Example: DEBUG
+
+Render Time: 1.12361
+===========================
+Example: DEBUG
+
+Render Time: 1.12829
+===========================
+Example: DEBUG
+
+Render Time: 1.12959
+===========================
+Example: DEBUG
+
+Render Time: 1.10931
+===========================
+Example: DEBUG
+
+Render Time: 1.11962
+===========================
+Example: DEBUG
+
+Render Time: 1.12085
+===========================
+Example: DEBUG
+
+Render Time: 1.11899
+===========================
+Example: DEBUG
+
+Render Time: 1.11908
+===========================
+Example: DEBUG
+
+Render Time: 1.11799
+===========================
+Example: DEBUG
+
+Render Time: 1.11642
+===========================
+Example: DEBUG
+
+Render Time: 1.11773
+===========================
+Example: DEBUG
+
+Render Time: 1.11584
+===========================
+Example: DEBUG
+
+Render Time: 1.1187
+===========================
+Example: DEBUG
+
+Render Time: 1.1187
+===========================
+Example: DEBUG
+
+Render Time: 1.12004
+===========================
+Example: DEBUG
+
+Render Time: 1.12152
+===========================
+Example: DEBUG
+
+Render Time: 1.11968
+===========================
+Example: DEBUG
+
+Render Time: 1.11905
+===========================
+Example: DEBUG
+
+Render Time: 1.12096
+===========================
+Example: DEBUG
+
+Render Time: 1.12216
+===========================
+Example: DEBUG
+
+Render Time: 1.12079
+===========================
+Example: DEBUG
+
+Render Time: 1.11913
+===========================
+Example: DEBUG
+
+Render Time: 1.12052
+===========================
+Example: DEBUG
+
+Render Time: 1.11924
+===========================
+Example: DEBUG
+
+Render Time: 1.11678
+===========================
+Example: DEBUG
+
+Render Time: 1.11054
+===========================
+Example: DEBUG
+
+Render Time: 1.11449
+===========================
+Example: DEBUG
+
+Render Time: 1.12255
+===========================
+Example: DEBUG
+
+Render Time: 1.1203
+===========================
+Example: DEBUG
+
+Render Time: 1.15055
+===========================
+Example: DEBUG
+
+Render Time: 1.13126
+===========================
+Example: DEBUG
+
+Render Time: 1.12689
+===========================
+Example: DEBUG
+
+Render Time: 1.12785
+===========================
+Example: DEBUG
+
+Render Time: 1.12858
+===========================
+Example: DEBUG
+
+Render Time: 1.12726
+===========================
+Example: DEBUG
+
+Render Time: 1.12216
+===========================
+Example: DEBUG
+
+Render Time: 1.11879
+===========================
+Example: DEBUG
+
+Render Time: 1.12165
+===========================
+Example: DEBUG
+
+Render Time: 1.13141
+===========================
+Example: DEBUG
+
+Render Time: 1.12293
+===========================
+Example: DEBUG
+
+Render Time: 0.0642299
+===========================
+Example: DEBUG
+
+Render Time: 0.0299633
+===========================
+Example: DEBUG
+
+Render Time: 0.0293875
+===========================
+Example: DEBUG
+
+Render Time: 0.029841
+===========================
+Example: DEBUG
+
+Render Time: 0.0291115
+===========================
+Example: DEBUG
+
+Render Time: 0.0295385
+===========================
+Example: DEBUG
+
+Render Time: 0.031027
+===========================
+Example: DEBUG
+
+Render Time: 0.0317995
+===========================
+Example: DEBUG
+
+Render Time: 0.0309307
+===========================
+Example: DEBUG
+
+Render Time: 0.0316409
+===========================
+Example: DEBUG
+
+Render Time: 0.0261864
+===========================
+Example: DEBUG
+
+Render Time: 0.0886862
+===========================
+Example: DEBUG
+
+Render Time: 0.0566953
+===========================
+Example: DEBUG
+
+Render Time: 33.7381
+===========================
+Example: DEBUG
+
+Render Time: 0.0473528
+===========================
+Example: DEBUG
+
+Render Time: 0.00505883
+===========================
+Example: DEBUG
+
+Render Time: 0.0465172
+===========================
+Example: DEBUG
+
+Render Time: 0.0536973
+===========================
+Example: DEBUG
+
+Render Time: 0.043358
+===========================
+Example: DEBUG
+
+Render Time: 0.0428211
+===========================
+Example: DEBUG
+
+Render Time: 0.0428804
+===========================
+Example: DEBUG
+
+Render Time: 0.0449816
+===========================
+Example: DEBUG
+
+Render Time: 0.0425779
+===========================
+Example: DEBUG
+
+Render Time: 0.042482
+===========================
+Example: DEBUG
+
+Render Time: 0.0425277
+===========================
+Example: DEBUG
+
+Render Time: 20.1258
+===========================
+Example: DEBUG
+
+Render Time: 1.65467
+===========================
+Example: DEBUG
+
+Render Time: 1.65606
+===========================
+Example: DEBUG
+
+Render Time: 0.0583434
+===========================
+Example: DEBUG
+
+Render Time: 0.251044
+===========================
+Example: DEBUG
+
+Render Time: 4.09036
+===========================
+Example: DEBUG
+
+Render Time: 0.134174
+===========================
+Example: DEBUG
+
+Render Time: 1.89708
+===========================
+Example: DEBUG
+
+Render Time: 0.0598058
+===========================
+Example: DEBUG
+
+Render Time: 0.248409
+===========================
+Example: DEBUG
+
+Render Time: 1.48947
+===========================
+Example: DEBUG
+
+Render Time: 4.12368
+===========================
+Example: DEBUG
+
+Render Time: 1.84776
+===========================
+Example: DEBUG
+
+Render Time: 26.4444
+===========================
+Example: DEBUG
+
+Render Time: 1.01025
+===========================
+Example: DEBUG
+
+Render Time: 1.01007
+===========================
+Example: DEBUG
+
+Render Time: 0.158218
+===========================
+Example: DEBUG
+
+Render Time: 0.733472
+===========================
+Example: DEBUG
+
+Render Time: 0.735546
+===========================
+Example: DEBUG
+
+Render Time: 1.04502
+===========================
+Example: DEBUG
+
+Render Time: 0.955969
+===========================
+Example: DEBUG
+
+Render Time: 0.957103
+===========================
+Example: DEBUG
+
+Render Time: 0.936805
+===========================
+Example: DEBUG
+
+Render Time: 0.156321
+===========================
+Example: DEBUG
+
+Render Time: 0.158619
+===========================
+Example: DEBUG
+
+Render Time: 0.15816
+===========================
+Example: DEBUG
+
+Render Time: 0.736745
+===========================
+Example: DEBUG
+
+Render Time: 0.928223
+===========================
+Example: DEBUG
+
+Render Time: 0.929755
+===========================
+Example: DEBUG
+
+Render Time: 0.927062
+===========================
+Example: DEBUG
+
+Render Time: 0.926829
+===========================
+Example: DEBUG
+
+Render Time: 0.930227
+===========================
+Example: DEBUG
+
+Render Time: 0.157603
+===========================
+Example: DEBUG
+
+Render Time: 0.170761
+===========================
+Example: DEBUG
+
+Render Time: 0.927608
+===========================
+Example: DEBUG
+
+Render Time: 0.926714
+===========================
+Example: DEBUG
+
+Render Time: 0.931066
+===========================
+Example: DEBUG
+
+Render Time: 0.928446
+===========================
+Example: DEBUG
+
+Render Time: 0.926917
+===========================
+Example: DEBUG
+
+Render Time: 0.931112
+===========================
+Example: DEBUG
+
+Render Time: 0.929232
+===========================
+Example: DEBUG
+
+Render Time: 0.930463
+===========================
+Example: DEBUG
+
+Render Time: 0.977211
+===========================
+Example: DEBUG
+
+Render Time: 0.15798
+===========================
+Example: DEBUG
+
+Render Time: 0.979204
+===========================
+Example: DEBUG
+
+Render Time: 0.848421
+===========================
+Example: DEBUG
+
+Render Time: 0.860401
+===========================
+Example: DEBUG
+
+Render Time: 1.78856
+===========================
+Example: DEBUG
+
+Render Time: 3.28326
+===========================
+Example: DEBUG
+
+Render Time: 1.79091
+===========================
+Example: DEBUG
+
+Render Time: 1.79238
+===========================
+Example: DEBUG
+
+Render Time: 1.80083
+===========================
+Example: DEBUG
+
+Render Time: 1.79868
+===========================
+Example: DEBUG
+
+Render Time: 1.7994
+===========================
+Example: DEBUG
+
+Render Time: 1.80096
+===========================
+Example: DEBUG
+
+Render Time: 1.79716
+===========================
+Example: DEBUG
+
+Render Time: 1.71378
+===========================
+Example: DEBUG
+
+Render Time: 1.71345
+===========================
+Example: DEBUG
+
+Render Time: 1.71477
+===========================
+Example: DEBUG
+
+Render Time: 1.71474
+===========================
+Example: DEBUG
+
+Render Time: 1.71284
+===========================
+Example: DEBUG
+
+Render Time: 1.82259
+===========================
+Example: DEBUG
+
+Render Time: 1.80831
+===========================
+Example: DEBUG
+
+Render Time: 1.808
+===========================
+Example: DEBUG
+
+Render Time: 1.8073
+===========================
+Example: DEBUG
+
+Render Time: 6.65008
+===========================
+Example: DEBUG
+
+Render Time: 6.64633
+===========================
+Example: DEBUG
+
+Render Time: 6.64256
+===========================
+Example: DEBUG
+
+Render Time: 6.64811
+===========================
+Example: DEBUG
+
+Render Time: 6.64464
+===========================
+Example: DEBUG
+
+Render Time: 6.62484
+===========================
+Example: DEBUG
+
+Render Time: 6.63981
+===========================
+Example: DEBUG
+
+Render Time: 6.63589
+===========================
+Example: DEBUG
+
+Render Time: 6.63716
+===========================
+Example: DEBUG
+
+Render Time: 6.61305
+===========================
+Example: DEBUG
+
+Render Time: 6.63891
+===========================
+Example: DEBUG
+
+Render Time: 6.63605
+===========================
+Example: DEBUG
+
+Render Time: 6.62967
+===========================
+Example: DEBUG
+
+Render Time: 0.0018947
+===========================
+Example: DEBUG
+
+Render Time: 7.14344
+===========================
+Example: DEBUG
+
+Render Time: 7.77152
+===========================
+Example: DEBUG
+
+Render Time: 21.1823
+===========================
+Example: DEBUG
+
+Render Time: 7.18786
+===========================
+Example: DEBUG
+
+Render Time: 7.19669
+===========================
+Example: DEBUG
+
+Render Time: 7.56689
+===========================
+Example: DEBUG
+
+Render Time: 7.65627
+===========================
+Example: DEBUG
+
+Render Time: 7.74647
+===========================
+Example: DEBUG
+
+Render Time: 8.11375
+===========================
+Example: DEBUG
+
+Render Time: 8.50076
+===========================
+Example: DEBUG
+
+Render Time: 8.49831
+===========================
+Example: DEBUG
+
+Render Time: 8.49529

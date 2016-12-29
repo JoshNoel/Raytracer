@@ -1,9 +1,11 @@
 #pragma once
-#include "glm/glm.hpp"
 #include "Ray.h"
+#include "CudaDef.h"
+#include "glm/glm.hpp"
 #include "Texture.h"
+#include "managed.h"
 
-class Material
+class Material : public Managed
 {
 public:
 
@@ -51,12 +53,12 @@ public:
 
 	//calculates unpolarized reflectivity of material from Index of Refraction 1(n1) into the material given the angle of incidence
 		// default incoming index of refraction of 1.0f represents air
-	float calcReflectivity(float angleOfIncidence, float n1 = 1.0f);
+	CUDA_HOST CUDA_DEVICE float calcReflectivity(float angleOfIncidence, float n1 = 1.0f) const;
 
 	//returns diffuse color of material at intersection point
 		//samples a texture if one exists for the material
 		//otherwise returns color
-	glm::vec3 sample(const Ray& ray, float t) const;
+	CUDA_HOST CUDA_DEVICE glm::vec3 sample(const Ray& ray, float t) const;
 
 	//loads .mtl file, which contains material data for corresponding .obj
 		//called from GeometryObj::loadOBJ
@@ -72,6 +74,15 @@ public:
 	float reflectivity;
 
 	void setTexture(const Texture&);
+
+#ifdef USE_CUDA
+	struct constants
+	{
+		const float AIR = Material::IOR::AIR;
+		const float WATER = Material::IOR::WATER;
+		const float ICE = Material::IOR::ICE;
+	} CONSTS;
+#endif
 
 private:
 	Texture texture;

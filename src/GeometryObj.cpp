@@ -3,26 +3,17 @@
 #include <fstream>
 #include "TriObject.h"
 #include <memory>
+#include <stdlib.h>
 #include <string.h>
-
-GeometryObj::GeometryObj(std::shared_ptr<Shape> s, const Material& mat)
-	: material(mat), shape(s)
-{
-	s->parent = this;
-}
-
-GeometryObj::GeometryObj(std::shared_ptr<Shape> s, const Material& mat, const std::string& name)
-	: GeometryObj(s, mat)
-{
-	this->name = name;
-}
+#include "CudaLoader.h"
+#include "helper/array.h"
 
 
 GeometryObj::~GeometryObj()
 {
 }
 
-bool GeometryObj::loadOBJ(const std::string& path, std::vector<std::unique_ptr<GeometryObj>>* objectList, const glm::vec3& position, bool flipNormals)
+bool GeometryObj::loadOBJ(CudaLoader& cudaLoader, const std::string& path, std::vector<std::unique_ptr<GeometryObj>>* objectList, const glm::vec3& position, bool flipNormals)
 {
 	bool hasUV = false;
 
@@ -37,9 +28,13 @@ bool GeometryObj::loadOBJ(const std::string& path, std::vector<std::unique_ptr<G
 	ifs.open(path);
 	if (ifs.fail())
 	{
-		char* s;
-		_strerror_s(s, 80, "_strerror()");
-		std::cerr << "Error in loadOBJ: " << s;
+		char* s = nullptr;
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+		s = strerror(errno);
+#else
+		s = strerror(errno);
+#endif
+		std::cerr << "Error in loadOBJ with path " << path << ": " << s << std::endl;
 		std::flush(std::cerr);
 		return false;
 	}
@@ -65,11 +60,17 @@ bool GeometryObj::loadOBJ(const std::string& path, std::vector<std::unique_ptr<G
 			std::string objectName = line.substr(spacePos + 1);
 
 			//initialize triangle object
-			std::shared_ptr<TriObject> triObject = std::make_shared<TriObject>(position);
+			TriObject** triObject = cudaLoader.loadShape<TriObject>(position, flipNormals);
+			////triObject is a device pointer
 			std::string materialName;
-			triObject->loadOBJ(path, objectLineCounter, materialName, vertexOffset, uvOffset);
-			triObject->initAccelStruct();
-			triObject->flipNormals(flipNormals);
+			std::vector<Triangle**> tris;
+			tris.reserve(200);
+			BoundingBox* aabb = new BoundingBox();
+			TriObject::loadOBJ(tris, aabb, position, path, objectLineCounter, materialName, vertexOffset, uvOffset, cudaLoader);
+
+			//now need to copy triangles and aabb to device pointer
+				//queue copy to cudaLoader, will be copied once shape pointers are validated.
+			cudaLoader.queueData(triObject, tris, aabb);
 
 			//initialize material
 			Material material;
@@ -84,6 +85,7 @@ bool GeometryObj::loadOBJ(const std::string& path, std::vector<std::unique_ptr<G
 			{
 				material.loadMTL(DEFAULT_MTL_PATH + DEFAULT_MTL_NAME, DEFAULT_MTL_NAME);
 			}
+
 			objectList->push_back(std::make_unique<GeometryObj>(triObject, material, objectName));
 		}
 	}

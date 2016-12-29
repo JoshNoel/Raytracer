@@ -1,44 +1,54 @@
 #pragma once
+#include "CudaDef.h"
 #include "Ray.h"
 #include "Sphere.h"
 #include "Image.h"
 #include "Camera.h"
-#include "Light.h"
-#include "Plane.h"
 #include "Scene.h"
-#include <vector>
-#include <memory>
 #include <random>
 #include <atomic>
 
 
-class Renderer
+class Renderer : public Managed
 {
 public:
-	Renderer(const Scene* scene, Image* image);
+	//ensure these pointers are to heap in order for cuda unified memory to function
+	Renderer(Scene* scene, Image* image, Camera* cam);
 
 	bool init();
 
+#ifdef USE_CUDA
 	//const to ensure threads can call
+	CUDA_HOST void renderKernel(dim3 kernelDim, dim3 blockDim, curandState_t* states);
+	//launches kernel
+	void renderCuda();
+#endif
+
+#ifndef USE_CUDA
 	glm::vec3 renderPixel(int x , int y) const;
+#endif
 	void writeImage(glm::vec3 color, int x, int y) const;
 
+
 	Image* image;
-	Camera camera;
+	Camera* camera;
 
-private:
+	Scene* scene;
 
-	const Scene* scene;
+#ifdef USE_CUDA
+	Scene::GpuData* sceneGpuData;
+	curandState_t* states;
+#endif
 
 	//casts ray into the scene and returns color at intersection point if there is an intersection
 		//thit0 and thit1 are inputs that are set to the t-values representing the intersection point on the ray
 		//depth represents what order ray is being cast (i.e. primary, secondary, tertiary, etc.)
-	glm::vec3 castRay(Ray& ray, float& thit0, float& thit1, int depth) const;
-	glm::vec3 castRay(Ray& ray, int depth) const;
+	CUDA_DEVICE glm::vec3 castRay(Ray& ray, float& thit0, float& thit1, int depth) const;
+	CUDA_DEVICE glm::vec3 castRay(Ray& ray, int depth) const;
 
 	//returns whether a ray hits an object
-	bool hitsObject(Ray& ray, float& thit0, float& thit1) const;
-	bool hitsObject(Ray& ray) const;
+	CUDA_DEVICE bool hitsObject(Ray& ray, float& thit0, float& thit1) const;
+	CUDA_DEVICE bool hitsObject(Ray& ray) const;
 
 	//used to generate random points on an area light to crate soft shadows
 	mutable std::minstd_rand rng;
@@ -49,5 +59,9 @@ private:
 	static const int NUM_THREADS;
 
 	mutable std::atomic<int> pixelsRendered;
+
+	//8*8 threads per block
+	//calculate # of blocks in x and y dims using this value
+	const int BLOCK_DIM = 8;
 };
 

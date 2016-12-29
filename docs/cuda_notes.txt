@@ -1,0 +1,24 @@
+﻿Plan to fix fact that virtual classes cannot be transferred from host to device:
+	Shape class and derived hold logic
+		Initialized on device
+	data struct will hold shape data
+		loaded/initialized on host, transferred to device
+		
+
+CUDA Shape*
+	Must return reference to Shape* in CudaLoader::ShapePointerList<Shape*>.
+	This way references will shadow pointer in the vector when the device pointers are copied back in CudaLoader::loadShapePointers()
+		without the added syntax of returning Shape**.
+	Must declare reference variables static in function so returning reference to element in vector does not lead to dangling references
+	
+	Returning references would make codebase much more verbose as once can no longer treat returned pointer references as anonymous shape types
+		This would be solved, however, if one used Shape** as once can just cast these to their respective pointer types (i.e. Shape** -> Triangle**)
+			static_cast and reinterpret_cast return new pointer to same address (rvalue), so cannot do conversion like this: Triangle*&->Shape*& or vice-versa
+			
+TODO:
+Optimize kernels
+fix object file loading (fbx?)
+	need less space during runtime
+	faster read access
+create scene file format rather than altering main
+fix memory issues (currently small obj's take up gigs of memory)

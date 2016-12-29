@@ -1,38 +1,60 @@
 ﻿#include "Triangle.h"
-#include "glm/gtx/transform.hpp"
 #include "TriObject.h"
 #include "GeometryObj.h"
 
+const int Triangle::parameters::PARAM_SIZES[Triangle::parameters::MAX_PARAMS] = {
+0,
+sizeof(helper::array<glm::vec3, 3>),
+sizeof(helper::array<glm::vec3, 3>) + sizeof(bool),
+sizeof(helper::array<glm::vec3, 3>) + sizeof(bool) + sizeof(glm::vec3),
+sizeof(helper::array<glm::vec3, 3>) + sizeof(bool) + sizeof(glm::vec3) + sizeof(helper::array<glm::vec2, 3>),
+sizeof(helper::array<glm::vec3, 3>) + sizeof(bool) + sizeof(glm::vec3) + sizeof(helper::array<glm::vec2, 3>) + sizeof(BoundingBox*)
+};
 
-Triangle::Triangle(const std::array<glm::vec3, 3>& p, bool calcNormal)
-	: points(p), Shape(calcCenter())
+/*
+Triangle::parameters::parameters(const helper::array<glm::vec3, 3>& points, bool calc_normal, const glm::vec3& position, const helper::array<glm::vec2, 3>& uv_array, BoundingBox* aabb)
 {
-	if(calcNormal)
-		normal = calcObjectNormal();
-	else
-		normal = glm::vec3(0, 1, 0);
+	data = new Data();
+	data->points = points;
+	data->calcNormal = calc_normal;
+	data->position = position;
+	data->uv_array = uv_array;
+	data->aabb = aabb;
+	num_params = 5;
 }
 
-Triangle::~Triangle()
+Triangle::parameters::parameters(const helper::array<glm::vec3, 3>& points, bool calc_normal)
 {
-}
+	data = new Data();
+	data->points = points;
+	data->calcNormal = calc_normal;
 
-void Triangle::setUVCoords(const std::array<glm::vec2, 3>& uv)
+	helper::array<glm::vec2, 3> a;
+	a[0] = glm::vec2();
+	a[1] = glm::vec2();
+	a[2] = glm::vec2();
+	data->uv_array = a;
+	data->aabb = new BoundingBox();
+	num_params = 2;
+}
+*/
+	
+void Triangle::setUVCoords(const helper::array<glm::vec2, 3>& uv)
 {
-	uvCoords = uv;
+	*uvCoords = uv;
 	hasUV = true;
 }
 
-std::array<glm::vec3, 3> Triangle::getPoints() const
+CUDA_DEVICE CUDA_HOST helper::array<glm::vec3, 3, true> Triangle::getPoints() const
 {
-	return points;
+	return *points;
 }
 
-bool Triangle::getUV(std::array<glm::vec2, 3>& coords) const
+CUDA_DEVICE CUDA_HOST bool Triangle::getUV(helper::array<glm::vec2, 3, true>& coords) const
 {
 	if(hasUV)
 	{
-		coords = this->uvCoords;
+		coords = *this->uvCoords;
 		return true;
 	}
 	else
@@ -41,42 +63,44 @@ bool Triangle::getUV(std::array<glm::vec2, 3>& coords) const
 	} 
 }
 
-glm::vec3 Triangle::calcObjectNormal() const
+CUDA_DEVICE CUDA_HOST glm::vec3 Triangle::calcObjectNormal() const
 {
-	return glm::normalize(glm::cross(points[1] - points[0], points[2] - points[0]));
+	return glm::normalize(glm::cross((*points)[1] - (*points)[0], (*points)[2] - (*points)[0]));
 }
 
-glm::vec3 Triangle::calcWorldIntersectionNormal(const Ray& ray) const
+CUDA_DEVICE glm::vec3 Triangle::calcWorldIntersectionNormal(const Ray& ray) const
 {
 	return normal;
 }
 
-void Triangle::setPosition(const glm::vec3& pos)
+CUDA_DEVICE CUDA_HOST void Triangle::setPosition(const glm::vec3& pos)
 {
 	//updates points in world space and triangleCenter 
 	position = pos;
-	std::array<glm::vec3, 3> p;
+	helper::array<glm::vec3, 3> p;
+	glm::mat4 translation = glm::mat4(1.0f);
+	translation[3] = glm::vec4(pos, 1);
 	for(unsigned int i = 0; i < 3; ++i)
 	{
-		glm::vec4 v = glm::vec4(points[i], 1);
-		p[i] = glm::vec3((glm::translate(glm::mat4(1.0f), position) * v));
+		glm::vec4 v = glm::vec4((*points)[i], 1);
+		p[i] = glm::vec3(translation * v);
 	}
 
-	points_world = p;
+	*points_world = p;
 	triangleCenter = calcCenter();
 }
 
-std::array<glm::vec3, 3> Triangle::getWorldCoords() const
+CUDA_DEVICE CUDA_HOST helper::array<glm::vec3, 3, true> Triangle::getWorldCoords() const
 {
-	return points_world;
+	return *points_world;
 }
 
-glm::vec3 Triangle::calcCenter() const
+CUDA_DEVICE CUDA_HOST glm::vec3 Triangle::calcCenter() const
 {
-	return position + glm::vec3((points[0] + points[1] + points[2]) / 3.0f);
+	return position + glm::vec3(((*points)[0] + (*points)[1] + (*points)[2]) / 3.0f);
 }
 
-bool Triangle::intersects(Ray& ray, float& thit0, float& thit1) const
+CUDA_DEVICE bool Triangle::intersects(Ray& ray, float& thit0, float& thit1) const
 {	 
 	//Ray-Triangle intersection: -[((o-P₀) • N)]/[d • N] = t
 
@@ -112,12 +136,9 @@ bool Triangle::intersects(Ray& ray, float& thit0, float& thit1) const
 		//if the ray intersects the triangle's plane outside the bounds of the triangle then
 			//(side vector) X (to intersection vector) will point in opposite direction as the triangle's
 			//normal for one of the points on the triangle
-	if(glm::dot(glm::cross(points_world[1] - points_world[0], intersection - points_world[0]), normal) > 0)
-	{
-		if(glm::dot(glm::cross(points_world[2] - points_world[1], intersection - points_world[1]), normal) > 0)
-		{
-			if(glm::dot(glm::cross(points_world[0] - points_world[2], intersection - points_world[2]), normal) > 0)
-			{
+	if(glm::dot(glm::cross((*points_world)[1] - (*points_world)[0], intersection - (*points_world)[0]), normal) > 0) {
+		if(glm::dot(glm::cross((*points_world)[2] - (*points_world)[1], intersection - (*points_world)[1]), normal) > 0) {
+			if(glm::dot(glm::cross((*points_world)[0] - (*points_world)[2], intersection - (*points_world)[2]), normal) > 0) {
 					thit0 = t;
 					if(t > thit1)
 						thit1 = t;

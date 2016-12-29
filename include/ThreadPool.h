@@ -45,6 +45,10 @@ public:
     ThreadPool(const Renderer*);
     ~ThreadPool();
 
+    ThreadPool(const ThreadPool&) = delete;
+    ThreadPool& operator=(const ThreadPool&) = delete;
+    ThreadPool& operator=(const ThreadPool&&) = delete;
+
 	bool addJob(const ThreadJob&);
 	void joinThreads();
 	void doneAddingJobs();

@@ -1,22 +1,48 @@
 #include "BoundingBox.h"
 #include "MathHelper.h"
 
-BoundingBox::BoundingBox(glm::vec3 minB, glm::vec3 maxB)
+CUDA_DEVICE CUDA_HOST BoundingBox::BoundingBox(glm::vec3 minB, glm::vec3 maxB)
 	: minBounds(minB), maxBounds(maxB)
 {
 }
 
-BoundingBox::BoundingBox()
+CUDA_DEVICE CUDA_HOST BoundingBox::BoundingBox()
 	: BoundingBox(glm::vec3(-_INFINITY, -_INFINITY, _INFINITY), glm::vec3(_INFINITY, _INFINITY, -_INFINITY))
 {
 }
 
-BoundingBox::~BoundingBox()
+CUDA_DEVICE CUDA_HOST BoundingBox::BoundingBox(const BoundingBox& bbox)
+	: BoundingBox(bbox.minBounds, bbox.maxBounds)
 {
 }
 
+CUDA_DEVICE CUDA_HOST BoundingBox::BoundingBox(BoundingBox&& bbox)
+	: BoundingBox(bbox.minBounds, bbox.maxBounds)
+{
+}
+
+CUDA_DEVICE CUDA_HOST BoundingBox::~BoundingBox()
+{
+}
+
+CUDA_DEVICE CUDA_HOST BoundingBox& BoundingBox::operator=(const BoundingBox& bbox)
+{
+	this->minBounds = bbox.minBounds;
+	this->maxBounds = bbox.maxBounds;
+	return *this;
+}
+
+CUDA_DEVICE CUDA_HOST BoundingBox& BoundingBox::operator=(BoundingBox&& bbox)
+{
+	this->minBounds = bbox.minBounds;
+	this->maxBounds = bbox.maxBounds;
+	return *this;
+}
+
+
+
 //Extends bounds to include bbox
-void BoundingBox::join(const BoundingBox& bbox)
+CUDA_DEVICE CUDA_HOST void BoundingBox::join(const BoundingBox& bbox)
 {
 	//join minBounds
 	if(minBounds.x > bbox.minBounds.x)
@@ -37,7 +63,7 @@ void BoundingBox::join(const BoundingBox& bbox)
 		maxBounds.z = bbox.maxBounds.z;
 }
 
-int BoundingBox::getLongestAxis() const
+CUDA_DEVICE int BoundingBox::getLongestAxis() const
 {
 	float xLength = maxBounds.x - minBounds.x;
 	float yLength = maxBounds.y - minBounds.y;
@@ -55,12 +81,12 @@ int BoundingBox::getLongestAxis() const
 	return 0;
 }
 
-glm::vec3 BoundingBox::getCentroid() const
+CUDA_DEVICE CUDA_HOST glm::vec3 BoundingBox::getCentroid() const
 {
 	return glm::vec3((minBounds + maxBounds) / 2.0f);
 }
 
-bool BoundingBox::intersects(const Ray& ray, float& thit0, float& thit1) const
+CUDA_DEVICE bool BoundingBox::intersects(const Ray& ray, float& thit0, float& thit1) const
 {
 	//Ray = O+dt
 	//Bmin = box minimum bounds on each axis
@@ -160,7 +186,7 @@ bool BoundingBox::intersects(const Ray& ray, float& thit0, float& thit1) const
 	return true;
 }
 
-bool BoundingBox::intersects(const Ray& ray) const
+CUDA_DEVICE bool BoundingBox::intersects(const Ray& ray) const
 {
 	float t0, t1;
 	return intersects(ray, t0, t1);
