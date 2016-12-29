@@ -1,7 +1,8 @@
 #include "Core.h"
+#include "CudaLoader.h"
 
 ///Creates ThreadPool from renderer
-Core::Core(const Renderer* renderer)
+Core::Core(Renderer* renderer)
 	: threadPool(renderer), renderer(renderer)
 {
 	
@@ -14,7 +15,10 @@ void Core::render()
 {
 #ifdef USE_CUDA
 	//if using cuda launch kernel
-	renderer->renderCuda();
+	if (renderer->init())
+		renderer->renderCuda();
+	else
+		std::cerr << "Error initializing renderer!" << std::endl;
 
 #else
 	for(int i = 0; i < renderer->image->width; i++)

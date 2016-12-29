@@ -1,63 +1,30 @@
 #include "Light.h"
+#include "CudaDef.h"
 #include "glm/gtx/rotate_vector.hpp"
 
-Light::Light(const glm::vec3& p, const glm::vec3& c, float i, LIGHT_TYPE type)
+Light::Light(Plane** areaShape, const glm::vec3& p, const glm::vec3& c, float i, LIGHT_TYPE type)
 	: pos(p),
 	color(c),
 	intensity(i),
-	type(type)
-{
-	areaShape = nullptr;
-}
+	type(type),
+	host_areaShape(areaShape),
+	areaShape(nullptr)
+{}
+
+Light::Light(Plane** areaShape)
+	: Light(areaShape, glm::vec3(0,0,0))
+{}
 
 Light::~Light()
 {
-	delete areaShape;
 }
 
 Light::Light(const Light& light)
-{
-	type = light.type;
-	intensity = light.intensity;
-	color = light.color;
-	pos = light.pos;
-	dir = light.dir;
-	castsShadow = light.castsShadow;
-	isAreaLight = light.isAreaLight;
-	if(light.areaShape && light.isAreaLight)
-	{
-		areaShape = new Plane;
-		*areaShape = *light.areaShape;
-	}
-	else
-	{
-		areaShape = nullptr;
-	}
-}
+	: areaShape(light.areaShape), host_areaShape(light.host_areaShape), type(light.type), intensity(light.intensity), color(light.color), pos(light.color), dir(light.dir),
+	castsShadow(light.castsShadow), isAreaLight(light.isAreaLight)
+{}
 
-Light& Light::operator=(const Light& light)
-{
-	type = light.type;
-	intensity = light.intensity;
-	color = light.color;
-	pos = light.pos;
-	dir = light.dir;
-	castsShadow = light.castsShadow;
-	isAreaLight = light.isAreaLight;
-	if(light.areaShape && light.isAreaLight)
-	{
-		areaShape = new Plane;
-		*areaShape = *light.areaShape;
-	}
-	else
-	{
-		areaShape = nullptr;
-	}
-
-	return *this;
-}
-
-void Light::calcDirection(float xAngle, float yAngle, float zAngle)
+CUDA_DEVICE CUDA_HOST void Light::calcDirection(float xAngle, float yAngle, float zAngle)
 {
 	glm::vec3 vector = glm::vec3(0, 0, -1);
 	vector = glm::rotateX(vector, xAngle);
@@ -65,10 +32,4 @@ void Light::calcDirection(float xAngle, float yAngle, float zAngle)
 	vector = glm::rotateZ(vector, zAngle);
 
 	dir = glm::normalize(vector);
-}
-
-void Light::createShape(const Plane& shape)
-{
-	areaShape = new Plane(shape);
-	areaShape->setPosition(pos);
 }

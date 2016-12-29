@@ -1,8 +1,9 @@
 #pragma once
+#include "CudaDef.h"
 #include "glm/glm.hpp"
 #include "managed.h"
 
-class Camera : Managed
+class Camera : public Managed
 {
 public:
 	Camera();

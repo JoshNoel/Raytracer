@@ -46,8 +46,8 @@ public:
     ~ThreadPool();
 
     ThreadPool(const ThreadPool&) = delete;
-    ThreadPool& ThreadPool::operator=(const ThreadPool&) = delete;
-    ThreadPool& ThreadPool::operator=(const ThreadPool&&) = delete;
+    ThreadPool& operator=(const ThreadPool&) = delete;
+    ThreadPool& operator=(const ThreadPool&&) = delete;
 
 	bool addJob(const ThreadJob&);
 	void joinThreads();

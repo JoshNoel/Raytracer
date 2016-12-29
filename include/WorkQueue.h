@@ -3,6 +3,7 @@
 
 #include <list>
 #include <mutex>
+#include <condition_variable>
 
 template<typename T>
 class WorkQueue
@@ -12,11 +13,17 @@ public:
 		: mutex(), condition_variable(), list(), doneWork(false), maxSize(max_size)
 	{}
 	WorkQueue(WorkQueue&& wq)
-		: doneWork(std::move(wq.doneWork)), list(std::move(wq.list)), mutex(std::move(wq.mutex)), condition_variable(std::move(wq.condition_variable))
-	{}
+	{
+		wq.mutex.lock();
+		doneWork = std::move(wq.doneWork);
+		list = std::move(wq.list);
+		wq.mutex.unlock();
+	}
 	~WorkQueue() 
 	{
+		mutex.lock();
 		doneWork = true;
+		mutex.unlock();
 	}
 
 	void push(const T& val)

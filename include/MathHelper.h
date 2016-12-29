@@ -1,5 +1,6 @@
 #pragma once
 #include <algorithm>
+#include "CudaDef.h"
 
 //used to create slight offset between secondary rays and intersection point
 	//avoids self intersection
@@ -14,7 +15,7 @@
 	#define _INFINITY 10000.0f
 #endif
 
-#define _PI_ 2.0f*std::acos(0.0f)
+#define _PI_ 3.14159265f
 
 //converts degrees to radians
 #define degToRad(d) d*(_PI_ / 180.0f)
@@ -25,7 +26,7 @@ public:
 
 	//Modified quadratic equation to resolve floating point error
 	//http://en.wikipedia.org/wiki/Loss_of_significance
-	inline static bool solveQuadratic(float a, float b, float c, float& x0, float& x1)
+	CUDA_DEVICE CUDA_HOST inline static bool solveQuadratic(float a, float b, float c, float& x0, float& x1)
 	{
 		float des = (b*b) - 4 * a*c;
 		if(des < 0) 
@@ -56,8 +57,8 @@ public:
 	//returns sign of num
 	//	negative -> return -1
 	//	positive -> return 1
-	template <typename T> 
-	inline static int sign(T num)
+	template<typename T> 
+	CUDA_DEVICE CUDA_HOST inline static int sign(T num)
 	{
 		return (num > 0) - (num < 0);
 	}

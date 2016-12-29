@@ -1,8 +1,11 @@
 #pragma once
-#include "glm/glm.hpp"
 #include "Plane.h"
+#include "CudaDef.h"
+#include "glm/glm.hpp"
+#include "managed.h"
 
 class Light
+	: public Managed
 {
 public:
 
@@ -12,18 +15,27 @@ public:
 		DIRECTIONAL
 	};
 
-	Light(const glm::vec3& pos = glm::vec3(0,0,0), const glm::vec3& color = glm::vec3(255,255,255),
+	explicit Light(Plane** areaShape = nullptr, const glm::vec3& pos = glm::vec3(0,0,0), const glm::vec3& color = glm::vec3(255,255,255),
 		float intensity = 10.0f, LIGHT_TYPE type = LIGHT_TYPE::POINT);
+
+	explicit Light(Plane** areaShape);
+
 	Light(const Light&);
 	~Light();
-	Light& operator=(const Light&);
+	Light& operator=(const Light&) = delete;
+	Light& operator=(Light&&) = delete;
 
 	//calculates direction of light from x, y, and z angles
-	void calcDirection(float xAngle, float yAngle, float zAngle); 
+	CUDA_DEVICE CUDA_HOST void calcDirection(float xAngle, float yAngle, float zAngle);
 
 	//creates an area light shape from a plane
-	void createShape(const Plane&);
-	
+	void setShape(Plane** shape) { host_areaShape = shape;  }
+	void finalize() 
+	{ 
+		if(host_areaShape)
+			areaShape = *host_areaShape; 
+	}
+
 	LIGHT_TYPE type;
 	float intensity;
 	glm::vec3 color;
@@ -32,6 +44,8 @@ public:
 	bool castsShadow = true;
 	bool isAreaLight = false;
 
+	//device pointer
 	Plane* areaShape;
+	Plane** host_areaShape;
 };
 

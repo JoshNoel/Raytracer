@@ -1,19 +1,30 @@
 #pragma once
-#include "glm/glm.hpp"
 #include "Ray.h"
+#include "CudaDef.h"
+#include "glm/glm.hpp"
+#include "managed.h"
 
-class BoundingBox
+class BoundingBox 
+	: public Managed
 {
 public:
-	BoundingBox();
-	BoundingBox(glm::vec3 minBounds, glm::vec3 maxBounds);
-	~BoundingBox();
+	CUDA_DEVICE CUDA_HOST BoundingBox();
+	CUDA_DEVICE CUDA_HOST BoundingBox(const BoundingBox&);
+	CUDA_DEVICE CUDA_HOST BoundingBox(BoundingBox&&);
 
-	CUDA_DEVICE CUDA_HOST bool intersects(const Ray& ray, float& thit0, float& thit1) const;
-	CUDA_DEVICE CUDA_HOST bool intersects(const Ray& ray) const;
+	CUDA_DEVICE CUDA_HOST BoundingBox(glm::vec3 minBounds, glm::vec3 maxBounds);
+	CUDA_DEVICE CUDA_HOST ~BoundingBox();
+
+	CUDA_DEVICE CUDA_HOST BoundingBox& operator=(const BoundingBox&);
+	CUDA_DEVICE CUDA_HOST BoundingBox& operator=(BoundingBox&&);
+
+
+
+	CUDA_DEVICE bool intersects(const Ray& ray, float& thit0, float& thit1) const;
+	CUDA_DEVICE bool intersects(const Ray& ray) const;
 
 	//x=0, y=1, z=2
-	CUDA_DEVICE CUDA_HOST int getLongestAxis() const;
+	CUDA_DEVICE int getLongestAxis() const;
 
 	//joins the minBounds and maxBounds of this* with bbox
 	CUDA_DEVICE CUDA_HOST void join(const BoundingBox& bbox);

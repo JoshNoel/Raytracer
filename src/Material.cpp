@@ -4,6 +4,7 @@
 #include "MathHelper.h"
 #include <array>
 #include <fstream>
+#include "helper/array.h"
 
 Material::Material(glm::vec3 col, float dc, glm::vec3 specCol, float sc, float shine, float ref, float ior)
 	: color(col), diffuseCoef(dc), indexOfRefrac(ior), specCoef(sc),
@@ -107,7 +108,7 @@ bool Material::loadMTL(const std::string& path, const std::string& materialName)
 }
 
 
-glm::vec3 Material::sample(const Ray& ray, float t) const
+CUDA_HOST CUDA_DEVICE glm::vec3 Material::sample(const Ray& ray, float t) const
 {
 	if(!hasTexture)
 		return color;
@@ -116,7 +117,7 @@ glm::vec3 Material::sample(const Ray& ray, float t) const
 	//first compute coefficients for weighted average of uvCoords at 3 triangle points for the intersection point
 	//I = intersection
 	glm::vec3 I = ray.pos + ray.dir * t;
-	std::array<glm::vec2, 3> triCoords;
+	helper::array<glm::vec2, 3, true> triCoords;
 	if(!ray.hitTri->getUV(triCoords))
 		return color;
 	
@@ -166,7 +167,7 @@ glm::vec3 Material::sample(const Ray& ray, float t) const
 	return texture.getPixel(intersectionCoord);
 }
 
-float Material::calcReflectivity(float angle, float n1)
+CUDA_HOST CUDA_DEVICE float Material::calcReflectivity(float angle, float n1) const
 {
 	//calculates the reflectivity of the material using fresnel's law
 

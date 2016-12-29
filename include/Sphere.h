@@ -1,6 +1,8 @@
 ﻿#pragma once
-#include "glm/glm.hpp"
 #include "Shape.h"
+#include "CudaDef.h"
+#include "glm/glm.hpp"
+
 
 class Sphere
 	: public Shape
@@ -36,10 +38,82 @@ class Sphere
 
 
 public:
-	Sphere();
-	Sphere(glm::vec3 pos, float radius);
-	~Sphere();
-	SHAPE_TYPE getType() const override { return SHAPE_TYPE::SPHERE; }
+	CUDA_DEVICE CUDA_HOST Sphere(glm::vec3 pos = glm::vec3(0,0,0), float radius = 1.0f);
+	CUDA_DEVICE CUDA_HOST ~Sphere();
+
+	struct parameters
+		: public Shape::parameters
+	{
+		parameters(const glm::vec3& position, float radius)
+		{
+			data = new Data();
+			data->position = position;
+			data->radius = radius;
+			num_params = 2;
+		}
+	
+		explicit parameters(const glm::vec3& position)
+		{
+			data = new Data();
+			data->position = position;
+			num_params = 1;
+		}
+
+		parameters()
+		{
+			data = new  Data();
+			num_params = 0;
+		}
+
+		parameters(parameters&& params)
+		{
+			data = new Data();
+			data->position = params.getPosition();
+			data->radius = params.getRadius();
+			num_params = params.num_params;
+		}
+
+		glm::vec3 getPosition() const{ return data->position;  }
+		float getRadius() const { return data->radius;  }
+
+		size_t getParamSize(int num_params) override
+		{
+			assert(num_params < MAX_PARAMS);
+			return PARAM_SIZES[num_params];
+		}
+
+		size_t getParamSize() override
+		{
+			return PARAM_SIZES[num_params];
+		}
+
+		void* getParam(unsigned i) override
+		{
+			switch (i)
+			{
+			default:
+				assert(i < num_params);
+			case 0:
+				return &data->position;
+			case 1:
+				return &data->radius;
+			}
+		}
+
+	private:
+		static const int MAX_PARAMS = 3;
+		//holds additive size of params
+		static const int PARAM_SIZES[MAX_PARAMS];
+
+		struct Data : public Managed
+		{
+			glm::vec3 position = glm::vec3(0, 0, 0);
+			float radius = 1.0f;
+		};
+		Data* data;
+	};
+
+	CUDA_DEVICE CUDA_HOST SHAPE_TYPE getType() const override { return SHAPE_TYPE::SPHERE; }
 
 	/*Tests for ray sphere intersection using Math.solveQuadratic(see Sphere.h)
 	* returns result of determinant
@@ -50,8 +124,8 @@ public:
 	* t0 will contain position of first intersection(or only if tangent)
 	* t1 will contain position of second intersection
 	*/
-	bool intersects(Ray& ray, float& thit0, float& thit1) const override;
-	glm::vec3 calcWorldIntersectionNormal(const Ray& ray) const override;
+	CUDA_DEVICE bool intersects(Ray& ray, float& thit0, float& thit1) const override;
+	CUDA_DEVICE glm::vec3 calcWorldIntersectionNormal(const Ray& ray) const override;
 
 	float radius;
 };

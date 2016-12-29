@@ -23,10 +23,12 @@ ThreadPool::ThreadPool(const Renderer* renderer)
 	{
 		threadList.emplace_back(&jobQueue, renderer);
 	}
+#ifndef USE_CUDA
 	for (int i = 0; i < numThreads; i++) 
 	{
 		threadList[i].start();
 	}
+#endif
 }
 
 ThreadPool::~ThreadPool()
@@ -58,7 +60,7 @@ bool ThreadPool::addJob(const ThreadJob& job)
 
 void ThreadPool::joinThreads()
 {
-	for (int i = 0; i < threadList.size(); i++)
+	for (unsigned i = 0; i < threadList.size(); i++)
 	{
 		threadList[i].m_thread.join();
 	}
@@ -88,8 +90,10 @@ void ThreadPool::RenderThread::run()
 				ThreadJob job = m_jobQueue->pop();
 				lock.unlock();
 				//render pixel
+#ifndef USE_CUDA
 				glm::vec3 color = p_renderer->renderPixel(job.x(), job.y());
 				p_renderer->writeImage(color, job.x(), job.y());
+#endif USE_CUDA
 			}
 			else
 			{

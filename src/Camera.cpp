@@ -7,6 +7,7 @@ Camera::Camera()
 	direction(0, 0, -1),
 	up(0, 1, 0),
 	fov(45),
+	focalLength(1.0f),
 	viewDistance(_INFINITY)
 {
 }

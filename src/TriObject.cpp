@@ -1,58 +1,79 @@
 #include "TriObject.h"
+#include "CudaDef.h"
 #include <fstream>
-#include <istream>
 #include "glm/glm.hpp"
-#include "MathHelper.h"
 #include "BoundingBox.h"
+#include "CudaLoader.h"
 
-TriObject::TriObject()
-	: Shape(glm::vec3(0,0,0))
+const int TriObject::parameters::PARAM_SIZES[TriObject::parameters::MAX_PARAMS] = { 
+0,
+sizeof(glm::vec3),
+sizeof(glm::vec3) + sizeof(bool) };
+
+CUDA_DEVICE TriObject::TriObject(glm::vec3 pos, bool flipNormals)
+	: Shape(pos), root(nullptr), invertNormals(flipNormals)
 {
+#ifdef USE_CUDA
+	gpuData = new GpuData();
+#endif
 }
 
-TriObject::TriObject(glm::vec3 pos)
-	: Shape(pos)
+CUDA_DEVICE TriObject::~TriObject()
 {
+#ifndef USE_CUDA
+	for(unsigned i = 0; i < tris.size(); i++) {
+		delete tris[i];
+	}
+#endif
+	delete root;
 }
 
-TriObject::~TriObject()
-{
-}
-
-bool TriObject::checkTris(const std::vector<Triangle*>* tris, Ray& ray, float& thit0, float& thit1) const
+CUDA_DEVICE bool TriObject::checkTris(Node* node, Ray& ray, float& thit0, float& thit1) const
 {
 	//iterate triangles and test if there is an intersection
 	bool hit = false;
-	std::vector<Triangle*>::const_iterator i;
-	for(i = tris->begin(); i != tris->end(); ++i)
+#ifdef USE_CUDA
+	//use gpuData if using cuda
+	for (unsigned i = 0; i <node->p_gpuData->trisSize; i++)
+	{
+		if (node->p_gpuData->tris[i]->intersects(ray, thit0, thit1))
+		{
+
+			if (thit0 < ray.thit0)
+				ray.hitTri = node->p_gpuData->tris[i];
+			hit = true;
+		}
+	}
+#else
+	vector<Triangle*>::const_iterator i;
+	for(i = node->tris->begin(); i != node->tris->end(); ++i)
 	{
 		if((*i)->intersects(ray, thit0, thit1))
 		{
-			
+
 			if(thit0 < ray.thit0)
 				ray.hitTri = *i;
 			hit = true;
-		}	
+		}
 	}
+#endif
 
 	return hit;
 }
 
-bool TriObject::checkNode(Node* node, Ray& ray, float& thit0, float& thit1) const
+CUDA_DEVICE bool TriObject::checkNode(Node* node, Ray& ray, float& thit0, float& thit1) const
 {
 	if(node == nullptr)
 		return false;
-	if(node->aabb.intersects(ray))
+	if(node->aabb->intersects(ray))
 	{
 		//if leaf just check tris in this node
 		if(node->isLeaf())
 		{
-			return checkTris(node->tris, ray, thit0, thit1);
-		}
+			return checkTris(node, ray, thit0, thit1);
+		}else{
+			//check tris in left or right node for intersection recursively
 
-		//check tris in left or right node for intersection recursively
-		else
-		{
 			assert(node->left && node->right);
 			bool hit = false;
 			if(checkNode(node->right, ray, thit0, thit1))
@@ -66,32 +87,37 @@ bool TriObject::checkNode(Node* node, Ray& ray, float& thit0, float& thit1) cons
 	return false;
 }
 
-void TriObject::initAccelStruct()
+CUDA_DEVICE void TriObject::initAccelStruct()
 {
 	root = new Node();
+#ifdef USE_CUDA
+	//TODO: create a device function that recursivly creates kernels
+	root->createNode(gpuData->tris, gpuData->trisSize, 0);
+#else
 	root->createNode(&tris, 0);
+#endif
 }
 
-bool TriObject::intersects(Ray& ray, float& thit0, float& thit1) const
+CUDA_DEVICE bool TriObject::intersects(Ray& ray, float& thit0, float& thit1) const
 {
 	return checkNode(root, ray, thit0, thit1);
 }
 
-glm::vec3 TriObject::calcWorldIntersectionNormal(const Ray& ray) const
+CUDA_DEVICE glm::vec3 TriObject::calcWorldIntersectionNormal(const Ray& ray) const
 {
 	glm::vec3 norm = ray.hitTri->calcWorldIntersectionNormal(ray);
 	return invertNormals ? -norm : norm;
 }
 
-bool TriObject::loadOBJ(const std::string& path)
+bool TriObject::loadOBJ(std::vector<Triangle**>& tris, BoundingBox* aabb, glm::vec3 position, const std::string& path, CudaLoader& loader)
 {
 	int x, y;
 	x = y = 0;
-        tempMatName = "";
-        return loadOBJ(path, 0, tempMatName, x, y);
+    std::string tempMatName = "";
+    return loadOBJ(tris, aabb, position, path, 0, tempMatName, x, y, loader);
 }
-
-bool TriObject::loadOBJ(std::string path, int startLine, std::string& materialName, int& vertexNum, int& uvNum)
+//TODO: make object loading multithreaded. May be better use of time to implement fbx support
+bool TriObject::loadOBJ(std::vector<Triangle**>& tris, BoundingBox* aabb, glm::vec3 position, std::string path, int startLine, std::string& materialName, int& vertexNum, int& uvNum, CudaLoader& loader)
 {
 	bool hasUV = false;
 
@@ -106,8 +132,10 @@ bool TriObject::loadOBJ(std::string path, int startLine, std::string& materialNa
 	if(!ifs.is_open())
 		return false;
 
-	std::vector<glm::vec3> vertices;
-	std::vector<glm::vec2> uvCoords;
+	vector<glm::vec3> vertices;
+	vector<glm::vec2> uvCoords;
+
+	bool firstTri = true;
 
 	int vertexOffset = vertexNum;
 	vertexNum = 0;
@@ -175,8 +203,8 @@ bool TriObject::loadOBJ(std::string path, int startLine, std::string& materialNa
 		//	vertexIndex/uv
 		else if(line[0] == 'f')
 		{
-			std::array<glm::vec3, 3> points;
-			std::array<glm::vec2, 3> points_uv;
+			helper::array<glm::vec3, 3, true> points;
+			helper::array<glm::vec2, 3, true> points_uv;
 			
 			int spacePos = line.find_first_of(' ');
 			int slashPos = line.find('/', spacePos + 1);
@@ -238,11 +266,19 @@ bool TriObject::loadOBJ(std::string path, int startLine, std::string& materialNa
 			bbox.minBounds += position;
 			bbox.maxBounds += position;
 
-			tris.push_back(new Triangle(points, true));
-			tris.back()->setUVCoords(points_uv);
-			tris.back()->aabb = bbox;
-			tris.back()->parent = this->parent;
-			tris.back()->setPosition(this->position);
+			//if not using cuda it will fill tris with Triangle* allocated on host
+			Triangle** tri = loader.loadShape<Triangle>(points, true, position, points_uv, new BoundingBox(bbox));
+			tris.push_back(tri);
+			if(firstTri)
+			{
+				*aabb = bbox;
+				firstTri = false;
+			} else
+			{
+				aabb->join(bbox);
+			}
+
+			//tris.back()->parent = this->parent;
 		}
 	}
 
@@ -251,12 +287,10 @@ bool TriObject::loadOBJ(std::string path, int startLine, std::string& materialNa
 	uvNum = uvOffset + uvCoords.size();
 
 	//set up object bounding box
-	aabb = tris[0]->aabb;
-	for(unsigned int i = 1; i < tris.size(); ++i)
-		aabb.join(tris[i]->aabb);
 	if(ifs.bad())
 		return false;
 
 	ifs.close();
+
 	return true;
 }

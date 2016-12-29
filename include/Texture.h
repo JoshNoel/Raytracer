@@ -1,11 +1,13 @@
 #pragma once
 #include <string>
+#include "CudaDef.h"
 #include "lodepng.h"
 #include "glm/glm.hpp"
 #include "Image.h"
+#include "managed.h"
 
 //Holds an image that can be added to a material and uv-mapped to a mesh
-class Texture
+class Texture : public Managed
 {
 public:
 	Texture();
@@ -16,8 +18,8 @@ public:
 	bool loadImage(const std::string& path);
 
 	//uvCoord stores normalized coordinates
-	const glm::vec3 getPixel(const glm::vec2& uvCoord) const;
+	CUDA_HOST CUDA_DEVICE glm::vec3 getPixel(const glm::vec2& uvCoord) const;
 
 private:
-	Image image;
+	Image* image;
 };
