@@ -5,6 +5,7 @@
 #include "GeometryObj.h"
 #include "glm/gtx/rotate_vector.hpp"
 #include <ctime>
+#include <sstream>
 
 
 const float Renderer::SHADOW_RAY_LENGTH = 50.0f;
@@ -12,11 +13,52 @@ const int Renderer::NUM_THREADS = 8;
 
 Renderer::Renderer(Scene* s, Image* i, Camera* cam)
 	:image(i), camera(cam), scene(s), distributionX(0, std::nextafter(1.0f, FLT_MAX)),
-        distributionY(0, std::nextafter(1.0f, FLT_MAX)), rng(1), pixelsRendered(0)
+	distributionY(0, std::nextafter(1.0f, FLT_MAX)), rng(1), pixelsRendered(0)
 {
 	//initialize random number generator for shadow sampling
 	std::random_device device;
 	rng.seed(device());
+
+	//TODO: dynamically determine based on image size (don't require to be divisible by NUM_BLOCKS)
+	NUM_BLOCKS_X = NUM_BLOCKS_Y = DEFAULT_NUM_BLOCKS;
+	std::ostringstream os_width;
+	os_width << "Could not find a number of blocks less than MAX_BLOCKS: " << MAX_BLOCKS << ", that evenly divides image width!";
+	std::string exception_width = os_width.str();
+	std::ostringstream os_height;
+	os_height << "Could not find a number of blocks less than MAX_BLOCKS: " << MAX_BLOCKS << ", that evenly divides image height!";
+	std::string exception_height = os_height.str();
+
+	bool dimensionsFound = false;
+
+	while (!dimensionsFound)
+	{
+		while (image->width % NUM_BLOCKS_X != 0)
+		{
+			NUM_BLOCKS_X++;
+			if (NUM_BLOCKS_X >= MAX_BLOCKS)
+			{
+				throw std::exception(exception_width.c_str());
+			}
+		}
+
+		while (image->height % NUM_BLOCKS_Y != 0)
+		{
+			NUM_BLOCKS_Y++;
+			if (NUM_BLOCKS_Y >= MAX_BLOCKS)
+			{
+				throw std::exception(exception_width.c_str());
+			}
+		}
+		BLOCK_DIM_X = image->width / NUM_BLOCKS_X;
+		BLOCK_DIM_Y = image->height / NUM_BLOCKS_Y;
+		if (BLOCK_DIM_X * BLOCK_DIM_Y <= MAX_THREADS_PER_BLOCK)
+			dimensionsFound = true;
+		else
+		{
+			NUM_BLOCKS_X++;
+			NUM_BLOCKS_Y++;
+		}
+	}
 }
 
 /*
@@ -33,7 +75,7 @@ Renderer::Renderer(Scene* s, Image* i, Camera* cam)
 *	n1/n2
 *Therefore the perpendicular component of the reflected vector is
 *	(n1/n2)*(I+(I•N*N))
-*The magnitude of the parallel components of the incident and refracted vector must be equal in order to 
+*The magnitude of the parallel components of the incident and refracted vector must be equal in order to
 *maintain the ratio according to snell's law, however the direction is opposite
 *Therefore R = -IncidentParallel + ReflectedPerpendicular
 *	R = (I•N*N) + (n1/n2)*(I+(I•N*N))
@@ -77,60 +119,60 @@ CUDA_DEVICE glm::vec3 reflect(glm::vec3 dir, glm::vec3 norm)
 
 bool Renderer::init()
 {
-	if(image == nullptr) return false;
-	if(scene->getObjectList().size() == 0) return false;
+	if (image == nullptr) return false;
+	if (scene->getObjectList().size() == 0) return false;
 
 	camera->calculate(image->getAR());
 
 	return true;
 }
 
-CUDA_GLOBAL void kernel(Renderer* renderer, curandState_t* states) {
+CUDA_GLOBAL void render_kernel(Renderer* renderer, curandState_t* states) {
 	//get assigned pixel
-		//for now each thread is 1 pixel
-		int pixelX = blockIdx.x * blockDim.x + threadIdx.x;
-		int pixelY = blockIdx.y * blockDim.y + threadIdx.y;
+	//for now each thread is 1 pixel
+	int pixelX = blockIdx.x * blockDim.x + threadIdx.x;
+	int pixelY = blockIdx.y * blockDim.y + threadIdx.y;
 
-		//init curand for later use in sampling
-		curand_init(clock64(), blockIdx.x, 0, &states[blockIdx.x * blockDim.x + blockIdx.y]);
+	//init curand for later use in sampling
+	curand_init(clock64(), blockIdx.x, 0, &states[blockIdx.x * blockDim.x + blockIdx.y]);
 
-		//create primary ray
-			//needs ray*, cuRAND*, camera*, image*
-		int samples = Scene::PRIMARY_SAMPLES;
-		glm::vec3 color;
+	//create primary ray
+	//needs ray*, cuRAND*, camera*, image*
+	int samples = Scene::PRIMARY_SAMPLES;
+	glm::vec3 color;
 
-		float x, y;
+	float x, y;
 
-		for(int primarySample = 0; primarySample < samples; ++primarySample)
-		{
-			Ray primary;
-			//normalize xdevice_vector
-			x = (2.0f * (pixelX + curand_uniform(&states[blockIdx.x *blockDim.x + blockIdx.y])*2-1) / renderer->image->width) - 1.0f;
-			//normalize y
-			y = 1.0f - (2.0f * (pixelY + curand_uniform(&states[blockIdx.x*blockDim.x + blockIdx.y])*2-1) / renderer->image->height);
+	for (int primarySample = 0; primarySample < samples; ++primarySample)
+	{
+		Ray primary;
+		//normalize xdevice_vector
+		x = (2.0f * (pixelX + curand_uniform(&states[blockIdx.x *blockDim.x + blockIdx.y]) * 2 - 1) / renderer->image->width) - 1.0f;
+		//normalize y
+		y = 1.0f - (2.0f * (pixelY + curand_uniform(&states[blockIdx.x*blockDim.x + blockIdx.y]) * 2 - 1) / renderer->image->height);
 
-			primary.dir = x*renderer->camera->right + y*renderer->camera->up + renderer->camera->direction;
-			primary.dir = glm::normalize(primary.dir);
+		primary.dir = x*renderer->camera->right + y*renderer->camera->up + renderer->camera->direction;
+		primary.dir = glm::normalize(primary.dir);
 
-			//Check collision...generate shadow rays
-			primary.thit0 = renderer->camera->viewDistance;
+		//Check collision...generate shadow rays
+		primary.thit0 = renderer->camera->viewDistance;
 
-			float thit0, thit1;
-			
-			glm::vec3 temp_color = renderer->castRay(primary, thit0, thit1, 0);
-			temp_color /= float(samples)/5.0f;
-			color += temp_color;
-		}
-		glm::clamp(color, glm::vec3(0), glm::vec3(255));
-		(*renderer->image)[pixelX + (pixelY)*renderer->image->width] = color;
+		float thit0, thit1;
 
-		//cast ray
-			//needs scene.bg, ray, scene.lights, scene.objects,
+		glm::vec3 temp_color = renderer->castRay(primary, thit0, thit1, 0);
+		temp_color /= float(samples) / 5.0f;
+		color += temp_color;
+	}
+	glm::clamp(color, glm::vec3(0), glm::vec3(255));
+	(*renderer->image)[pixelX + (pixelY)*renderer->image->width] = color;
+
+	//cast ray
+	//needs scene.bg, ray, scene.lights, scene.objects,
 }
 
 #ifdef USE_CUDA
 void Renderer::renderKernel(dim3 kernelDim, dim3 blockDim, curandState_t* states) {
-	kernel KERNEL_ARGS2(kernelDim, blockDim) (this, states);
+	render_kernel KERNEL_ARGS2(kernelDim, blockDim) (this, states);
 }
 
 #endif
@@ -141,25 +183,18 @@ void Renderer::renderCuda() {
 	CUDA_CHECK_ERROR(cudaDeviceSynchronize());
 	sceneGpuData = scene->getGpuData();
 
-	//calculate x and y dims of kernel based on block dims
-	int numBlocksX = (image->width+BLOCK_DIM-1) / BLOCK_DIM;
-	int numBlocksY = (image->height+BLOCK_DIM-1) / BLOCK_DIM;
+	std::cout << "numBlocksX: " << NUM_BLOCKS_X << "\t numBlocksY: " << NUM_BLOCKS_Y << std::endl;
+	std::cout << "blockDimX: " << BLOCK_DIM_X << "\t blockDimY: " << BLOCK_DIM_Y << std::endl;
 
-	std::cout << "numBlocksX: " << numBlocksX << "\t numBlocksY: " << numBlocksY << std::endl;
 
-	dim3 blockDim(BLOCK_DIM, BLOCK_DIM);
-	dim3 kernelDim(numBlocksX, numBlocksY);
+	dim3 blockDim(BLOCK_DIM_X, BLOCK_DIM_Y);
+	dim3 kernelDim(NUM_BLOCKS_X, NUM_BLOCKS_Y);
 
 	//curand
-	CUDA_CHECK_ERROR(cudaMalloc((void**) &this->states, numBlocksX*numBlocksY * sizeof(curandState_t)));
+	CUDA_CHECK_ERROR(cudaMalloc((void**) &this->states, NUM_BLOCKS_X*NUM_BLOCKS_Y * sizeof(curandState_t)));
 
 
-	renderKernel(kernelDim, blockDim, this->states);/*
-	size_t sSize;
-	size_t hSize;
-	cudaDeviceGetLimit(&sSize, cudaLimitStackSize);
-	cudaDeviceGetLimit(&hSize, cudaLimitMallocHeapSize);
-	std::cout << "Stack Size: " << sSize << ", Heap Size: " << hSize << std::endl;*/
+	renderKernel(kernelDim, blockDim, this->states);
 	CUDA_CHECK_ERROR(cudaDeviceSynchronize());
 
 	CUDA_CHECK_ERROR(cudaFree(this->states));
@@ -174,7 +209,7 @@ glm::vec3 Renderer::renderPixel(int pixelX, int pixelY) const
 	int samples = Scene::PRIMARY_SAMPLES;
 	glm::vec3 color;
 
-	for(int primarySample = 0; primarySample < samples; ++primarySample)
+	for (int primarySample = 0; primarySample < samples; ++primarySample)
 	{
 		float x, y;
 		Ray primary;
@@ -216,7 +251,7 @@ CUDA_DEVICE bool Renderer::hitsObject(Ray& ray, float& thit0, float& thit1) cons
 	unsigned objectListSize = objectList.size();
 #endif
 
-	for(unsigned s = 0; s < objectListSize; ++s)
+	for (unsigned s = 0; s < objectListSize; ++s)
 	{
 
 		float p0, p1;
@@ -224,13 +259,13 @@ CUDA_DEVICE bool Renderer::hitsObject(Ray& ray, float& thit0, float& thit1) cons
 		p1 = -_INFINITY;
 
 		//test collision, p0 is tmin and p1 is tmax where collisions occur on ray
-		if(objectList[s]->getShape()->aabb->intersects(ray))
+		if (objectList[s]->getShape()->aabb->intersects(ray))
 		{
-			if(objectList[s]->getShape()->intersects(ray, p0, p1))
+			if (objectList[s]->getShape()->intersects(ray, p0, p1))
 			{
 				//if p0 is not minimum, or is behind origin than this intersection is behind another object
 				//in the rays path, or is behind the camera
-				if(p0 < ray.thit0 && p0 > 0)
+				if (p0 < ray.thit0 && p0 > 0)
 				{
 					ray.thit0 = p0;
 					ray.thit1 = p1;
@@ -247,7 +282,7 @@ CUDA_DEVICE bool Renderer::hitsObject(Ray& ray, float& thit0, float& thit1) cons
 CUDA_DEVICE bool Renderer::hitsObject(Ray& ray) const
 {
 	float x, y;
-	x =  _INFINITY;
+	x = _INFINITY;
 	y = -_INFINITY;
 	bool hit = hitsObject(ray, x, y);
 	return (hit && x > 0);
@@ -267,28 +302,28 @@ CUDA_DEVICE glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, in
 	glm::vec3 ambientColor = scene->getAmbientColor();
 	float ambientIntensity = scene->getAmbientIntensity();
 #endif
-	glm::vec3 finalCol = glm::vec3(0,0,0);
+	glm::vec3 finalCol = glm::vec3(0, 0, 0);
 
-	if(depth > Scene::MAX_RECURSION_DEPTH)
+	if (depth > Scene::MAX_RECURSION_DEPTH)
 	{
 		finalCol = bgColor;
 	}
 	else
 	{
-		if(!hitsObject(ray, thit0, thit1))
+		if (!hitsObject(ray, thit0, thit1))
 		{
 			finalCol = bgColor;
 		}
 		else
 		{
-			finalCol = glm::vec3(0,0,0);
+			finalCol = glm::vec3(0, 0, 0);
 			Ray shadowRay;
 			shadowRay.pos = ray.pos + ray.dir * ray.thit0;
 
 			glm::vec3 normal = ray.hitObject->getShape()->calcWorldIntersectionNormal(ray);
-			normal =  glm::normalize(normal);
+			normal = glm::normalize(normal);
 
-			for(unsigned i = 0; i < lightListSize; i++)
+			for (unsigned i = 0; i < lightListSize; i++)
 			{
 				glm::vec3 colorFromLight = glm::vec3(0, 0, 0);
 #if (defined(__CUDA_ARCH__)) && (__CUDA_ARCH__ > 0)
@@ -299,167 +334,167 @@ CUDA_DEVICE glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, in
 				bool inShadow = true;
 
 				//////Check visibility to light//////
-				if(light->intensity < 0.0f)
+				if (light->intensity < 0.0f)
 					light->intensity = 0.0f;
 
 				float lightVisibility = 0.0f;
 				float lightFalloffIntensity = 0.0f;
-				switch(light->type)
+				switch (light->type)
 				{
-					case Light::POINT:
+				case Light::POINT:
+				{
+					//Monte Carlo Method - repeated random sampling of data approaches true value
+					//Fire rays from intersection point to areaLight, and average results
+					//samples are stratified over the area of the light
+					if (light->isAreaLight && light->areaShape != nullptr)
 					{
-						//Monte Carlo Method - repeated random sampling of data approaches true value
-							//Fire rays from intersection point to areaLight, and average results
-								//samples are stratified over the area of the light
-						if(light->isAreaLight && light->areaShape != nullptr)
-						{
-							float halfX = light->areaShape->getDimensions()[0] / 2.0f;
-							float halfY = light->areaShape->getDimensions()[1] / 2.0f;
+						float halfX = light->areaShape->getDimensions()[0] / 2.0f;
+						float halfY = light->areaShape->getDimensions()[1] / 2.0f;
 #ifndef USE_CUDA
-							std::uniform_real_distribution<float> distributionX(-1.0f, std::nextafter(1.0f, FLT_MAX));
-							std::uniform_real_distribution<float> distributionY(-1.0f, std::nextafter(1.0f, FLT_MAX));
+						std::uniform_real_distribution<float> distributionX(-1.0f, std::nextafter(1.0f, FLT_MAX));
+						std::uniform_real_distribution<float> distributionY(-1.0f, std::nextafter(1.0f, FLT_MAX));
 #endif
 
-							//In order to create grid scene->SHADOW_SAMPLES must be a perfect square
-							int SQRT_SAMPLES;
+						//In order to create grid scene->SHADOW_SAMPLES must be a perfect square
+						int SQRT_SAMPLES;
 #ifdef USE_CUDA
-							SQRT_SAMPLES = sceneGpuData->SQRT_DIV2_SHADOW_SAMPLES;
+						SQRT_SAMPLES = sceneGpuData->SQRT_DIV2_SHADOW_SAMPLES;
 #else
-							SQRT_SAMPLES = scene->SQRT_DIV2_SHADOW_SAMPLES;
+						SQRT_SAMPLES = scene->SQRT_DIV2_SHADOW_SAMPLES;
 #endif
-							auto start = -SQRT_SAMPLES;
-							auto end = SQRT_SAMPLES;
-							if(SQRT_SAMPLES == 1)
+						auto start = -SQRT_SAMPLES;
+						auto end = SQRT_SAMPLES;
+						if (SQRT_SAMPLES == 1)
+						{
+							start = 0;
+							end = 1;
+						}
+						for (int sampleX = start; sampleX < end; sampleX++)
+						{
+							for (int sampleY = start; sampleY < end; sampleY++)
 							{
-								start = 0;
-								end = 1;
-							}
-							for(int sampleX = start; sampleX < end; sampleX++)
-							{
-								for(int sampleY = start; sampleY < end; sampleY++)
-								{
 #if (defined(__CUDA_ARCH__) && (__CUDA_ARCH__ > 0))
-									float xPos = curand_uniform(&this->states[blockIdx.x * blockDim.x + blockIdx.y]);
-									float yPos = curand_uniform(&this->states[blockIdx.x * blockDim.x + blockIdx.y]);
+								float xPos = curand_uniform(&this->states[blockIdx.x * blockDim.x + blockIdx.y]);
+								float yPos = curand_uniform(&this->states[blockIdx.x * blockDim.x + blockIdx.y]);
 #else
-									float xPos = distributionX(rng);
-									float yPos = distributionY(rng);
+								float xPos = distributionX(rng);
+								float yPos = distributionY(rng);
 #endif
 
-									//change base position based on sample index to create grid of area SHADOW_SAMPLES
-									//each random sample will be taken from square of grid to stratify the results
-									//
-									//numGridSquares = scene->SHADOW_SAMPLES;
-									//numGridSquares MUST BE PERFECT SQUARE TO CREATE GRID;
-									//1 grid square side length = halfDimOfPlane / (sqrt(numGridSquares)/2)
-									//numGridSquaresPerSide = sqrt(numGridSquares)
-									//
-									//coordinate of center grid square at heightIndex h and widthIndex w,
-									//when h and y have domain[-numGridSquaresPerSide/2, numGridSquaresPerSide/2] = 
-									//	Center + [((w * gridSquareSideLength) - sign(w) * gridSquareSideLength / 2), 
-									//				(h * gridSquareSideLength) - sign(h) * gridSquareSideLength / 2)
-									float numGridSquares = Scene::SHADOW_SAMPLES;
+								//change base position based on sample index to create grid of area SHADOW_SAMPLES
+								//each random sample will be taken from square of grid to stratify the results
+								//
+								//numGridSquares = scene->SHADOW_SAMPLES;
+								//numGridSquares MUST BE PERFECT SQUARE TO CREATE GRID;
+								//1 grid square side length = halfDimOfPlane / (sqrt(numGridSquares)/2)
+								//numGridSquaresPerSide = sqrt(numGridSquares)
+								//
+								//coordinate of center grid square at heightIndex h and widthIndex w,
+								//when h and y have domain[-numGridSquaresPerSide/2, numGridSquaresPerSide/2] = 
+								//	Center + [((w * gridSquareSideLength) - sign(w) * gridSquareSideLength / 2), 
+								//				(h * gridSquareSideLength) - sign(h) * gridSquareSideLength / 2)
+								float numGridSquares = Scene::SHADOW_SAMPLES;
 #ifdef USE_CUDA
-									float gridSquareSideLength = halfX / (sqrt(numGridSquares) / 2.0f);
+								float gridSquareSideLength = halfX / (sqrt(numGridSquares) / 2.0f);
 #else
-									float gridSquareSideLength = halfX / (std::sqrt(numGridSquares) / 2.0f);
+								float gridSquareSideLength = halfX / (std::sqrt(numGridSquares) / 2.0f);
 #endif
 
-									//center of grid square
-									//	traverse each column
-									glm::vec3 basePos = light->areaShape->getPosition() +
-										(light->areaShape->getU() * ((sampleX * gridSquareSideLength) - (Math::sign(sampleX) * gridSquareSideLength / 2.0f))) +
-										(light->areaShape->getV() * ((sampleY * gridSquareSideLength) - (Math::sign(sampleY) * gridSquareSideLength / 2.0f)));
+								//center of grid square
+								//	traverse each column
+								glm::vec3 basePos = light->areaShape->getPosition() +
+									(light->areaShape->getU() * ((sampleX * gridSquareSideLength) - (Math::sign(sampleX) * gridSquareSideLength / 2.0f))) +
+									(light->areaShape->getV() * ((sampleY * gridSquareSideLength) - (Math::sign(sampleY) * gridSquareSideLength / 2.0f)));
 
-									//add random vector to center of grid square
-									//	this vector will give a random point within the grid square
-									glm::vec3 randVec;
-									randVec = ((gridSquareSideLength / 2.0f) * xPos * light->areaShape->getU()) +
-										((gridSquareSideLength / 2.0f) * yPos * light->areaShape->getV());
-									glm::vec3 randPosOnPlane = basePos + randVec;
+								//add random vector to center of grid square
+								//	this vector will give a random point within the grid square
+								glm::vec3 randVec;
+								randVec = ((gridSquareSideLength / 2.0f) * xPos * light->areaShape->getU()) +
+									((gridSquareSideLength / 2.0f) * yPos * light->areaShape->getV());
+								glm::vec3 randPosOnPlane = basePos + randVec;
 
-									Ray toLight;
-									//Ray starts at intersection point
-									toLight.pos = shadowRay.pos;
-									//Ray goes from intersection, to the randomly generated position
-									toLight.dir = randPosOnPlane - shadowRay.pos;
-									toLight.dir = glm::normalize(toLight.dir);
-									//small displacement added along normal to avoid self-intersection
-									toLight.pos += normal * RAY_EPSILON;
-							
-									//Light only contributes if it faces the object								
-									if(glm::dot(-toLight.dir, light->areaShape->getNormal()) > 0.0f)
+								Ray toLight;
+								//Ray starts at intersection point
+								toLight.pos = shadowRay.pos;
+								//Ray goes from intersection, to the randomly generated position
+								toLight.dir = randPosOnPlane - shadowRay.pos;
+								toLight.dir = glm::normalize(toLight.dir);
+								//small displacement added along normal to avoid self-intersection
+								toLight.pos += normal * RAY_EPSILON;
+
+								//Light only contributes if it faces the object								
+								if (glm::dot(-toLight.dir, light->areaShape->getNormal()) > 0.0f)
+								{
+									//Intersection point must also have a normal facing the light
+									//if there is an object between the intersection and point on light, the point is in shadow
+									if (glm::dot(normal, toLight.dir) > 0.0f && !hitsObject(toLight))
 									{
-										//Intersection point must also have a normal facing the light
-										//if there is an object between the intersection and point on light, the point is in shadow
-										if(glm::dot(normal, toLight.dir) > 0.0f && !hitsObject(toLight))
-										{
-											inShadow = false;
-											lightVisibility++;
-										}
+										inShadow = false;
+										lightVisibility++;
 									}
 								}
 							}
-
-							//calculate final shadow ray for lighting calculations
-							//also calculate light falloff using simple inverser square falloff
-							shadowRay.dir = light->pos - shadowRay.pos;
-							float lightRadius = glm::length(shadowRay.dir);
-							shadowRay.dir = glm::normalize(shadowRay.dir);
-#ifdef USE_CUDA
-							lightFalloffIntensity = (light->intensity) / (pow(lightRadius, 2.0f));
-#else
-							lightFalloffIntensity = (light->intensity) / (std::pow(lightRadius, 2.0f));
-#endif
-							lightVisibility /= Scene::SHADOW_SAMPLES;
-						} 
-						else 
-						{
-
-							//if its not an area light, treat it as a simple point light with hard visible/not visible falloff
-							shadowRay.dir = light->pos - shadowRay.pos;
-							float lightRadius = glm::length(shadowRay.dir);
-							shadowRay.dir = glm::normalize(shadowRay.dir);
-							Ray temp = shadowRay;
-							temp.pos += normal * RAY_EPSILON;
-							if(!hitsObject(temp) && glm::dot(normal, shadowRay.dir) > 0.0f)
-							{
-								inShadow = false;
-								lightVisibility = 1.0f;
-								lightFalloffIntensity = (light->intensity) / (4 * _PI_ * lightRadius);
-							}
 						}
-						break;
+
+						//calculate final shadow ray for lighting calculations
+						//also calculate light falloff using simple inverser square falloff
+						shadowRay.dir = light->pos - shadowRay.pos;
+						float lightRadius = glm::length(shadowRay.dir);
+						shadowRay.dir = glm::normalize(shadowRay.dir);
+#ifdef USE_CUDA
+						lightFalloffIntensity = (light->intensity) / (pow(lightRadius, 2.0f));
+#else
+						lightFalloffIntensity = (light->intensity) / (std::pow(lightRadius, 2.0f));
+#endif
+						lightVisibility /= Scene::SHADOW_SAMPLES;
 					}
-					case Light::DIRECTIONAL:
+					else
 					{
-						shadowRay.dir = -light->dir;
-						float dot = glm::dot(normal, shadowRay.dir);
-						if (dot > 0)
+
+						//if its not an area light, treat it as a simple point light with hard visible/not visible falloff
+						shadowRay.dir = light->pos - shadowRay.pos;
+						float lightRadius = glm::length(shadowRay.dir);
+						shadowRay.dir = glm::normalize(shadowRay.dir);
+						Ray temp = shadowRay;
+						temp.pos += normal * RAY_EPSILON;
+						if (!hitsObject(temp) && glm::dot(normal, shadowRay.dir) > 0.0f)
 						{
 							inShadow = false;
-							lightVisibility = dot;
-							shadowRay.dir = glm::normalize(shadowRay.dir);
-							lightFalloffIntensity = (light->intensity);
+							lightVisibility = 1.0f;
+							lightFalloffIntensity = (light->intensity) / (4 * _PI_ * lightRadius);
 						}
-						break;
 					}
+					break;
 				}
-				if(!inShadow)
+				case Light::DIRECTIONAL:
+				{
+					shadowRay.dir = -light->dir;
+					float dot = glm::dot(normal, shadowRay.dir);
+					if (dot > 0)
+					{
+						inShadow = false;
+						lightVisibility = dot;
+						shadowRay.dir = glm::normalize(shadowRay.dir);
+						lightFalloffIntensity = (light->intensity);
+					}
+					break;
+				}
+				}
+				if (!inShadow)
 				{
 					const Material& material = ray.hitObject->getMaterial();
-					if(material.type & Material::DIFFUSE)
+					if (material.type & Material::DIFFUSE)
 					{
 						//lightVisibilty: represents how in shadow a point is (1 = completly out of shadow, 0 = completely occluded)
 						//dot product gives cosine of angle between the vectors
 						//sample() gives the diffuse color of the point
 						//dot product must be positive or else the light has no influence
 						float dot = glm::dot(normal, shadowRay.dir);
-						if(dot > 0.0f)
+						if (dot > 0.0f)
 							colorFromLight += dot * material.sample(ray, ray.thit0) * material.diffuseCoef;
 					}
 
-					if(material.type & Material::BPHONG_SPECULAR)
+					if (material.type & Material::BPHONG_SPECULAR)
 					{
 						//Blinn-Phong shading model specular component
 						//specularComponent = specColor * specCoef * lightIntensity * (normal•bisector)ⁿ
@@ -469,20 +504,20 @@ CUDA_DEVICE glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, in
 						glm::vec3 bisector = glm::normalize(view + shadowRay.dir);
 						glm::vec3 r = reflect(-shadowRay.dir, normal);
 						float dot = glm::dot(view, r);
-						if(dot > 0.0f)
+						if (dot > 0.0f)
 						{
 #ifdef USE_CUDA
 							colorFromLight += material.specularColor * material.specCoef
-															* pow(dot, material.shininess);
+								* pow(dot, material.shininess);
 #else
 							colorFromLight += material.specularColor * material.specCoef
 								* std::pow(dot, material.shininess);
 #endif
 						}
 					}
-					if(material.type & Material::REFRACTIVE)
+					if (material.type & Material::REFRACTIVE)
 					{
-							
+
 						//////////////////REFRACTION////////////////////////
 						/*
 						****************SNELL'S LAW******************
@@ -508,7 +543,7 @@ CUDA_DEVICE glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, in
 						*
 						*/
 
-						if(ray.thit1 > -_INFINITY && material.indexOfRefrac >= 1.0f)
+						if (ray.thit1 > -_INFINITY && material.indexOfRefrac >= 1.0f)
 						{
 #ifdef USE_CUDA
 							float ior1 = material.CONSTS.AIR;
@@ -548,19 +583,19 @@ CUDA_DEVICE glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, in
 							transmitRatio = 1.0f - reflectionRatio;
 
 							float t0, t1;
-							if(ray.hitObject->getShape()->intersects(innerRay, t0, t1))
+							if (ray.hitObject->getShape()->intersects(innerRay, t0, t1))
 							{
 								innerRay.thit0 = t0;
 								innerRay.thit1 = t1;
 								Ray refractionRay;
 								refractionRay.pos = innerRay.pos + innerRay.dir * innerRay.thit0;
 								glm::vec3 norm = ray.hitObject->getShape()->calcWorldIntersectionNormal(innerRay);
-								
+
 								//calculate refraction ray
 								refractionRay.dir = refract(innerRay.dir, -norm, ior2, ior1);
 
 								//refraction ray must be in same direction as intersection normal
-								if(glm::dot(refractionRay.dir, norm) > 0.0f)
+								if (glm::dot(refractionRay.dir, norm) > 0.0f)
 								{
 									refractionRay.pos += norm * RAY_EPSILON;
 									colorFromLight += castRay(refractionRay, depth + 1) * transmitRatio;
@@ -581,13 +616,13 @@ CUDA_DEVICE glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, in
 			}
 
 
-			if(ray.hitObject->getMaterial().type & Material::MIRROR)
-			{			
+			if (ray.hitObject->getMaterial().type & Material::MIRROR)
+			{
 				//create reflection ray
 				Ray reflectionRay;
 				reflectionRay.pos = shadowRay.pos;
 				glm::vec3 eyeToSurface = reflectionRay.pos - ray.pos;
-				reflectionRay.dir = reflect(eyeToSurface, normal);				
+				reflectionRay.dir = reflect(eyeToSurface, normal);
 
 				//add bias to avoid self-intersection
 				reflectionRay.pos += normal * RAY_EPSILON;
@@ -595,10 +630,10 @@ CUDA_DEVICE glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, in
 				//TODO: calculate light lost as reflection depth increases
 				float thit0, thit1;
 				finalCol += castRay(reflectionRay, thit0, thit1, depth + 1) * (1.0f / (float(depth) + 1.0f)) * ray.hitObject->getMaterial().reflectivity;
-			}	
+			}
 
 			//add ambient light (no point can be completely black to add realism due to indirect lighting effects)
-			finalCol += + ambientColor * ambientIntensity;
+			finalCol += +ambientColor * ambientIntensity;
 		}
 
 
@@ -611,4 +646,3 @@ CUDA_DEVICE glm::vec3 Renderer::castRay(Ray& ray, int depth) const
 	float x, y;
 	return castRay(ray, x, y, depth);
 }
-

@@ -14,6 +14,7 @@
 #include "helper_cuda.h"
 #include <cuda.h>
 #include <cuda_runtime.h>
+#include <host_defines.h>
 #include <device_launch_parameters.h>
 #include <intrin.h>
 #endif

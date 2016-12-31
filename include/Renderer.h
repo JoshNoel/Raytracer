@@ -60,8 +60,14 @@ public:
 
 	mutable std::atomic<int> pixelsRendered;
 
-	//8*8 threads per block
-	//calculate # of blocks in x and y dims using this value
-	const int BLOCK_DIM = 8;
+	//number of threads per block in each dimension (2D)
+	//calculate # of blocks in image dims using these values
+	int BLOCK_DIM_X, BLOCK_DIM_Y;
+	int NUM_BLOCKS_X, NUM_BLOCKS_Y;
+	const int DEFAULT_NUM_BLOCKS = 8;
+	const int MAX_BLOCKS = 1024;
+
+	//determined through profiling (max_registers_per_block / registers_per_thread)
+	const int MAX_THREADS_PER_BLOCK = 200;
 };
 

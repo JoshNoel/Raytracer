@@ -1,0 +1,36 @@
+===========================
+BLOCK_DIM = 8: RELEASE
+
+Load Time: 0.105131
+Render Time: 8.49252
+
+===========================
+BLOCK_DIM = 100: RELEASE
+
+Load Time: 0.107592
+Render Time: 0.00344505
+
+===========================
+BLOCK_DIM = 100: RELEASE
+
+Load Time: 0.108863
+Render Time: 0.0040877
+
+===========================
+BLOCK_DIM = 100: RELEASE
+
+Load Time: 0.101848
+Render Time: 8.50533
+
+===========================
+REG_LIMIT = 50: RELEASE
+
+Load Time: 0.099159
+Render Time: 5.05041
+
+===========================
+NO_REG_LIMIT: RELEASE
+
+Load Time: 0.100239
+Render Time: 9.00468
+
