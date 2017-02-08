@@ -6,21 +6,20 @@
 #include <iostream>
 #include "Core.h"
 #include <stdlib.h>
-#include "helper/array.h"
+#include "helper/resource_helper.h"
 #include "CudaLoader.h"
 
-///In current setup it will render CUDA_test2.png///
 int main() {
 	//TODO: Determine register limit for render_kernel to balance occupancy and register usage
-	Logger::enabled = true;
-	Logger::title = "NO_REG_LIMIT";
+	Logger::enabled = false;
+	Logger::title = "DIV 32";
 
 	//temporary hard-coded values to ensure we don't run out of memory
 	//TODO: dynamically determine space needed
-	size_t stackSize = 2e4; //20kb stack size
+	size_t stackSize = 10000; //10kb stack size
 	size_t heapSize = 4e7;
 	cudaDeviceSetLimit(cudaLimitStackSize, stackSize);
-	cudaDeviceSetLimit(cudaLimitMallocHeapSize, heapSize);
+	//cudaDeviceSetLimit(cudaLimitMallocHeapSize, heapSize);
 	size_t sSize;
 	size_t hSize;
 	cudaDeviceGetLimit(&sSize, cudaLimitStackSize);
@@ -28,9 +27,8 @@ int main() {
 	std::cout << "Stack Size: " << sSize << ", Heap Size: " << hSize << std::endl;
 
 	//create image and set output path
-	//TODO: Changing image size to diff aspect ratio should add black bars to keep camera AR constant
 	Image* image = new Image(1920, 1080);
-    std::string outputImagePath = "F:\\Projects\\cuda\\raytracer\\docs\\examples\\CUDA_test_perf.png";
+    std::string outputImagePath = get_image_path("CUDA_test4.png");
 
     Camera* camera = new Camera();
 	camera->setPosition(glm::vec3(0, 0, 1));
@@ -103,8 +101,8 @@ int main() {
 	//create list of objects(meshes and materials) from .obj file, and add objects to the scene
 	bool flipNormals = false;
 	Logger::startClock("Load Time");
-	GeometryObj::loadOBJ(cudaLoader, "F:\\Projects\\cuda\\raytracer\\docs\\models\\icosphere.obj", &objectList, glm::vec3(3, -1, -6), flipNormals);
-	GeometryObj::loadOBJ(cudaLoader, "F:\\Projects\\cuda\\raytracer\\docs\\models\\box2.obj", &objectList, glm::vec3(0, -.7, -6.2), flipNormals);
+	//GeometryObj::loadOBJ(cudaLoader, get_obj_path("icosphere.obj"), &objectList, glm::vec3(3, -1, -6), flipNormals);
+	GeometryObj::loadOBJ(cudaLoader, get_obj_path("box2.obj"), &objectList, glm::vec3(0, -.7, -6.2), flipNormals);
 	Logger::record("Load Time");
 
 	for (unsigned int i = 0; i < objectList.size(); ++i)
@@ -132,11 +130,18 @@ int main() {
 
 
 	image->outputPNG(outputImagePath);
-	Logger::printLog(".\\docs\\logs\\Timing_Log_cuda.txt");
+	Logger::printLog(get_log_path("Timing_Log_cuda.txt"));
+
 
 	delete image;
 	delete camera;
 	delete scene;
+
+	//To fix current issue in NVIDIA Visual Profiler
+	CUDA_CHECK_ERROR(cudaDeviceSynchronize());
+	CUDA_CHECK_ERROR(cudaProfilerStop());
+	std::cout << "Done" << std::endl;
+
 	return 0;
 }
 

@@ -159,7 +159,7 @@ public:
 		//also uses stratified random sampling (like with the area lights) within each pixel
 		//average color of the primary rays to get final color of the pixel
 	//static const int host variable (and float if not on windows) can be accessed directly by device
-	static const int PRIMARY_SAMPLES = 16;
+	static const int PRIMARY_SAMPLES = 4;
 
 
 

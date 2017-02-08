@@ -266,7 +266,11 @@ void CudaLoader::loadShapePointers()
 
 	CUDA_CHECK_ERROR(cudaDeviceSynchronize());
 
-
+	for(auto it = shapeParamList.begin(); it != shapeParamList.end(); ++it)
+	{
+		delete *it;
+	}
+	shapeParamList.clear();
 
 	shapePointersLoaded = true;
 #endif
@@ -329,6 +333,8 @@ void CudaLoader::loadData(std::vector<std::unique_ptr<GeometryObj>>& geometryObj
 	data_loader KERNEL_ARGS2(1, 1)(d_objectList, objectList.size(), d_gpuDataList);
 
 	CUDA_CHECK_ERROR(cudaDeviceSynchronize());
+
+
 
 #else
 	//if not using cuda we can load data to triangle objects and initialize acceleration structure on host

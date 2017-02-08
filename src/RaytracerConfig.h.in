@@ -1,4 +1,8 @@
 #pragma once
 
-#define Raytracer_VERSION_MAJOR @VERSION_MAJOR@
-#define Raytracer_VERSION_MINOR @VERSION_MINOR@
+#cmakedefine Raytracer_VERSION_MAJOR "@Raytracer_VERSION_MAJOR@"
+#cmakedefine Raytracer_VERSION_MINOR "@Raytracer_VERSION_MINOR@"
+
+#cmakedefine MESH_DIR "@MESH_DIR@"
+#cmakedefine IMAGE_OUTPUT_DIR "@IMAGE_OUTPUT_DIR@"
+#cmakedefine LOGS_DIR "@LOGS_DIR@"

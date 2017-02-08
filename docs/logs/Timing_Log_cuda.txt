@@ -34,3 +34,45 @@ NO_REG_LIMIT: RELEASE
 Load Time: 0.100239
 Render Time: 9.00468
 
+===========================
+IMAGE WRITE: RELEASE
+
+Load Time: 0.103428
+Render Time: 9.3565
+
+===========================
+NO IMAGE WRITE: RELEASE
+
+Load Time: 0.0950398
+Render Time: 9.34559
+
+===========================
+DIV 32: RELEASE
+
+Load Time: 0.0999008
+Render Time: 7.48297
+
+===========================
+DIV 32: RELEASE
+
+Load Time: 0.112546
+Render Time: 85.871
+
+===========================
+DIV 32: RELEASE
+
+Load Time: 0.105061
+Render Time: 42.7985
+
+===========================
+DIV 32: RELEASE
+
+Load Time: 0.104104
+Render Time: 4.24285
+
+===========================
+DIV 32: RELEASE
+
+Load Time: 0.107298
+Render Time: 185.936
+

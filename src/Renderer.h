@@ -67,7 +67,10 @@ public:
 	const int DEFAULT_NUM_BLOCKS = 8;
 	const int MAX_BLOCKS = 1024;
 
+	bool extraBlock;
+
 	//determined through profiling (max_registers_per_block / registers_per_thread)
-	const int MAX_THREADS_PER_BLOCK = 200;
+	#define MAX_THREADS_PER_BLOCK 640
+	#define MIN_BLOCKS_PER_MULTIPROCESSOR 1
 };
 

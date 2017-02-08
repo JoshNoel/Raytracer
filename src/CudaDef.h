@@ -15,6 +15,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <host_defines.h>
+#include <cuda_profiler_api.h>
 #include <device_launch_parameters.h>
 #include <intrin.h>
 #endif
@@ -73,10 +74,24 @@ static inline void cudaErrorCheck(cudaError_t error, const char* file, unsigned 
 	#define CUDA_GLOBAL
 #endif
 
-#if defined(USE_CUDA)
-	#define KERNEL_ARGS2(kernel_dim, block_dim) <<< kernel_dim, block_dim >>>
+
+#if defined(USE_CUDA) && defined(__CUDACC__)
+#define CUDA_LAUNCH_BOUNDS(max_reg_usage, min_block_size) __launch_bounds__(max_reg_usage, min_block_size)
+#else
+#define CUDA_LAUNCH_BOUNDS(max_reg_usage, min_block_size)
+#endif
+
+
+#if defined(USE_CUDA) && defined(__CUDACC__)
+#define KERNEL_ARGS2(kernel_dim, block_dim) <<< kernel_dim, block_dim >>>
 #else
 	#define KERNEL_ARGS2(kernel_dim, block_dim)
+#endif
+
+#if defined(USE_CUDA) && defined(__CUDACC__)
+#define KERNEL_ARGS4(kernel_dim, block_dim, shared_mem, stream) <<< kernel_dim, block_dim, shared_mem, stream >>>
+#else
+#define KERNEL_ARGS4(kernel_dim, block_dim)
 #endif
 
 #endif

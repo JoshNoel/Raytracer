@@ -29,34 +29,55 @@ Renderer::Renderer(Scene* s, Image* i, Camera* cam)
 	std::string exception_height = os_height.str();
 
 	bool dimensionsFound = false;
-
+	//find block and kernel dimensions such that most of the image can be divided into blocks of some multiple of 32 threads
 	while (!dimensionsFound)
 	{
-		while (image->width % NUM_BLOCKS_X != 0)
+		//simple case: can divide image into blocks where MP can use 32 threads per instruction
+		if ((image->width * image->height) % 32 == 0 || true)
 		{
-			NUM_BLOCKS_X++;
-			if (NUM_BLOCKS_X >= MAX_BLOCKS)
+			//now find dimensions
+			while (image->width % NUM_BLOCKS_X != 0)
 			{
-				throw std::exception(exception_width.c_str());
+				NUM_BLOCKS_X++;
+				if (NUM_BLOCKS_X >= MAX_BLOCKS)
+				{
+					throw std::exception(exception_width.c_str());
+				}
 			}
-		}
 
-		while (image->height % NUM_BLOCKS_Y != 0)
-		{
-			NUM_BLOCKS_Y++;
-			if (NUM_BLOCKS_Y >= MAX_BLOCKS)
+			while (image->height % NUM_BLOCKS_Y != 0)
 			{
-				throw std::exception(exception_width.c_str());
+				NUM_BLOCKS_Y++;
+				if (NUM_BLOCKS_Y >= MAX_BLOCKS)
+				{
+					throw std::exception(exception_width.c_str());
+				}
+			}
+
+			BLOCK_DIM_X = image->width / NUM_BLOCKS_X;
+			BLOCK_DIM_Y = image->height / NUM_BLOCKS_Y;
+			if (BLOCK_DIM_X * BLOCK_DIM_Y <= MAX_THREADS_PER_BLOCK)
+			{
+				if ((BLOCK_DIM_X * BLOCK_DIM_Y) % 32 == 0 || true)
+				{
+					dimensionsFound = true;
+				}
+				else
+				{
+					NUM_BLOCKS_X++;
+				}
+			}
+			else
+			{
+				NUM_BLOCKS_X++;
+				NUM_BLOCKS_Y++;
 			}
 		}
-		BLOCK_DIM_X = image->width / NUM_BLOCKS_X;
-		BLOCK_DIM_Y = image->height / NUM_BLOCKS_Y;
-		if (BLOCK_DIM_X * BLOCK_DIM_Y <= MAX_THREADS_PER_BLOCK)
-			dimensionsFound = true;
 		else
 		{
-			NUM_BLOCKS_X++;
-			NUM_BLOCKS_Y++;
+			//case where image can't be divided into grid of constant size blocks and still have block_size % 32 == 0
+			//decrease greater dimension until it is divisible, leftover will be different sized kernel
+			//TODO
 		}
 	}
 }
@@ -127,6 +148,10 @@ bool Renderer::init()
 	return true;
 }
 
+CUDA_GLOBAL void setup_curand(curandState_t* states, unsigned long seed) {
+	curand_init(seed, threadIdx.x + blockIdx.x * blockDim.x, 0, &states[threadIdx.x + blockIdx.x * blockDim.x]);
+}
+
 CUDA_GLOBAL void render_kernel(Renderer* renderer, curandState_t* states) {
 	//get assigned pixel
 	//for now each thread is 1 pixel
@@ -134,7 +159,6 @@ CUDA_GLOBAL void render_kernel(Renderer* renderer, curandState_t* states) {
 	int pixelY = blockIdx.y * blockDim.y + threadIdx.y;
 
 	//init curand for later use in sampling
-	curand_init(clock64(), blockIdx.x, 0, &states[blockIdx.x * blockDim.x + blockIdx.y]);
 
 	//create primary ray
 	//needs ray*, cuRAND*, camera*, image*
@@ -143,7 +167,7 @@ CUDA_GLOBAL void render_kernel(Renderer* renderer, curandState_t* states) {
 
 	float x, y;
 
-	for (int primarySample = 0; primarySample < samples; ++primarySample)
+	for(int primarySample = 0; primarySample < samples; ++primarySample)
 	{
 		Ray primary;
 		//normalize xdevice_vector
@@ -171,7 +195,8 @@ CUDA_GLOBAL void render_kernel(Renderer* renderer, curandState_t* states) {
 }
 
 #ifdef USE_CUDA
-void Renderer::renderKernel(dim3 kernelDim, dim3 blockDim, curandState_t* states) {
+void Renderer::renderKernel(dim3 kernelDim, dim3 blockDim, curandState_t* states) 
+{
 	render_kernel KERNEL_ARGS2(kernelDim, blockDim) (this, states);
 }
 
@@ -179,6 +204,8 @@ void Renderer::renderKernel(dim3 kernelDim, dim3 blockDim, curandState_t* states
 
 #ifdef USE_CUDA
 void Renderer::renderCuda() {
+	//TODO: Break image into sectors to provide greater kernel size flexibility
+
 	scene->finalizeCUDA();
 	CUDA_CHECK_ERROR(cudaDeviceSynchronize());
 	sceneGpuData = scene->getGpuData();
@@ -186,15 +213,22 @@ void Renderer::renderCuda() {
 	std::cout << "numBlocksX: " << NUM_BLOCKS_X << "\t numBlocksY: " << NUM_BLOCKS_Y << std::endl;
 	std::cout << "blockDimX: " << BLOCK_DIM_X << "\t blockDimY: " << BLOCK_DIM_Y << std::endl;
 
-
-	dim3 blockDim(BLOCK_DIM_X, BLOCK_DIM_Y);
-	dim3 kernelDim(NUM_BLOCKS_X, NUM_BLOCKS_Y);
-
-	//curand
-	CUDA_CHECK_ERROR(cudaMalloc((void**) &this->states, NUM_BLOCKS_X*NUM_BLOCKS_Y * sizeof(curandState_t)));
+	//curand states
+	CUDA_CHECK_ERROR(cudaMalloc((void**) &this->states, NUM_BLOCKS_X * NUM_BLOCKS_Y * sizeof(curandState_t)));
 
 
-	renderKernel(kernelDim, blockDim, this->states);
+	/*//need to copy *this members needed for kernel creation, this is invalid once first kernel starts until it ends
+	auto BLOCK_DIM_X = this->BLOCK_DIM_X;
+	auto BLOCK_DIM_Y = this->BLOCK_DIM_Y / 4;
+	auto NUM_BLOCKS_X = this->NUM_BLOCKS_X;
+	auto NUM_BLOCKS_Y = this->NUM_BLOCKS_Y;
+	auto states = this->states;*/
+
+	dim3 blockDim(BLOCK_DIM_X, BLOCK_DIM_Y, 1);
+	dim3 kernelDim(NUM_BLOCKS_X, NUM_BLOCKS_Y, 1);
+	setup_curand KERNEL_ARGS2(kernelDim, blockDim) (states, clock());
+	CUDA_CHECK_ERROR(cudaDeviceSynchronize());
+	renderKernel(kernelDim, blockDim, states);
 	CUDA_CHECK_ERROR(cudaDeviceSynchronize());
 
 	CUDA_CHECK_ERROR(cudaFree(this->states));
