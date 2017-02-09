@@ -7,7 +7,6 @@
 inline std::string get_obj_path(std::string&& p_obj_name) {
 	std::string s = MESH_DIR;
 	s += '/' + p_obj_name;
-	std::cout << s << std::endl;
 	return s;
 }
 

@@ -14,21 +14,21 @@ SET(EXECUTABLE_OUTPUT_PATH bin)
 
 INCLUDE_DIRECTORIES(src)
 
-set(LODEPNG_DIR "./lib/lodpng" CACHE PATH "Path to glm include directory")
-INCLUDE_DIRECTORIES(${LODEPNG_DIR})
-
 set(NVIDIA_SAMPLES_DIR "" CACHE PATH "Path to nvidia samples include directory for use in utility functions")
 INCLUDE_DIRECTORIES("${NVIDIA_SAMPLES_DIR}/common/inc")
+if(NVIDIA_SAMPLES_DIR STREQUAL "")
+	message(SEND_ERROR "NVIDIA_SAMPLES_DIR must be set.")
+endif()
 	
-set(GLM_INCLUDE_DIR "./lib/glm" CACHE PATH "Path to glm include directory")
+set(GLM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib/glm" CACHE PATH "Path to glm include directory")
 INCLUDE_DIRECTORIES(${GLM_INCLUDE_DIR})
 
-set(LODEPNG_DIR "lib/lodepng" CACHE PATH "Path to lodepng")
+set(LODEPNG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib/lodepng" CACHE PATH "Path to lodepng")
 INCLUDE_DIRECTORIES(${LODEPNG_DIR})
 
-set(MESH_DIR "./res/meshes" CACHE PATH "Path to folder containing mesh files" )
-set(IMAGE_OUTPUT_DIR "./res/images" CACHE PATH "Path to folder containing image files" )
-set(LOGS_DIR "./res/logs" CACHE PATH "Path to folder containing log files" )
+set(MESH_DIR "${CMAKE_CURRENT_SOURCE_DIR}/docs/models" CACHE PATH "Path to folder containing mesh files" )
+set(IMAGE_OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/docs/examples" CACHE PATH "Path to folder containing image files" )
+set(LOGS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/docs/logs" CACHE PATH "Path to folder containing log files" )
 
 add_definitions(-DMESH_DIR=${MESH_DIR})
 add_definitions(-DIMAGE_OUTPUT_DIR=${IMAGE_OUTPUT_DIR})

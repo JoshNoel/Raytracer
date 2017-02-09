@@ -1,10 +1,10 @@
 # Raytracer
 CUDA-enabled 3D Raytracer
 
-Must enable CUDA_SEPARABLE COMPILATION
-If using Visual Studio, CUDA custom build rules must be enabled manually after cmake.
-	Project -> Build Customizations... -> Check CUDA
-	Mark all .cpp files as CUDA C/C++ files through file properties menu
+Must enable CUDA_SEPARABLE_COMPILATION CMake option manually
+May have to build twice for linking to work
+
+
 
 ================================================================================
 The MIT License
