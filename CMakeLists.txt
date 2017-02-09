@@ -14,7 +14,8 @@ if(TRY_BUILD_CUDA)
 
 	if(CUDA_FOUND)
 		set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};--gpu-architecture=sm_50;-std=c++11")
-
+		set(CUDA_SEPARABLE_COMPILATION ON CACHE BOOL "FindCUDA script variable determining whether files are compiled with -rc flag. Required for this project" FORCE)
+		
 		set(NVIDIA_SAMPLES_DIR "" CACHE PATH "Path to nvidia samples include directory for use in utility functions")
 		INCLUDE_DIRECTORIES("${NVIDIA_SAMPLES_DIR}/common/inc")
 		if(NVIDIA_SAMPLES_DIR STREQUAL "")
@@ -74,10 +75,12 @@ set(SOURCE_FILES
 	src/WorkQueue.cpp		
 	src/Core.cpp			
 	src/CudaLoader.cpp)	
-#need to set .cpp files to cuda source files so they are compiled with nvcc rather than host compiler
-set_source_files_properties(${SOURCE_FILES} PROPERTIES CUDA_SOURCE_PROPERTY_FORMAT OBJ)
+	
 
 if(CUDA_FOUND)
+	#need to set .cpp files to cuda source files so they are compiled with nvcc rather than host compiler
+	set_source_files_properties(${SOURCE_FILES} PROPERTIES CUDA_SOURCE_PROPERTY_FORMAT OBJ)
+
 	CUDA_ADD_EXECUTABLE(Raytracer
 		${SOURCE_FILES}
 		${LODEPNG_DIR}/lodepng.cpp

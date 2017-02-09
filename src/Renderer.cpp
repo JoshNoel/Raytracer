@@ -185,11 +185,10 @@ CUDA_GLOBAL void render_kernel(Renderer* renderer, curandState_t* states) {
 		float thit0, thit1;
 
 		glm::vec3 temp_color = renderer->castRay(primary, thit0, thit1, 0);
-		temp_color /= float(samples) / 5.0f;
+		glm::clamp(temp_color, glm::vec3(0), glm::vec3(255));
 		color += temp_color;
 	}
-	glm::clamp(color, glm::vec3(0), glm::vec3(255));
-	(*renderer->image)[pixelX + (pixelY)*renderer->image->width] = color;
+	(*renderer->image)[pixelX + (pixelY)*renderer->image->width] = glm::clamp(color / float(samples), glm::vec3(0), glm::vec3(255));
 
 	//cast ray
 	//needs scene.bg, ray, scene.lights, scene.objects,
@@ -259,10 +258,10 @@ glm::vec3 Renderer::renderPixel(int pixelX, int pixelY) const
 		primary.thit0 = camera->viewDistance;
 
 		float thit0, thit1;
-		color += glm::min(castRay(primary, thit0, thit1, 0), glm::vec3(255, 255, 255));
+		color += glm::min(castRay(primary, thit0, thit1, 0), glm::vec3(255));
 	}
 
-	return (color / float(samples));
+	return glm::min(color / float(samples), glm::vec3(255));
 }
 #endif
 void Renderer::writeImage(glm::vec3 color, int x, int y) const

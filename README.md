@@ -7,6 +7,9 @@ CUDA
 	May have to build twice for linking to work
 CPU
 	To disable CUDA build when it is available on your device, set cmake variable TRY_BUILD_CUDA=OFF
+	
+To have reasonable render times, build in release mode.
+to fill dependencies (excluding NVIDIA CUDA samples) pull submodules
 
 
 ================================================================================
