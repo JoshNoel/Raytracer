@@ -18,9 +18,9 @@ CUDA_DEVICE float getSurfaceArea(const BoundingBox& aabb)
 }
 
 #ifndef USE_CUDA
-void Node::createNode(vector<Triangle*>* tris, unsigned depth)
+void Node::createNode(vector<Triangle*>& tris, unsigned depth)
 {
-	createNode(tris->data(), tris->size(), depth);
+	createNode(tris.data(), tris.size(), depth);
 }
 #endif
 
@@ -101,12 +101,8 @@ CUDA_DEVICE void Node::createNode(Triangle** tris, const unsigned tris_size, uns
 		if(filledBuckets <= 1)
 		{
 			leaf = true;
-#ifdef USE_CUDA
-			this->p_gpuData->tris = tris;
-			this->p_gpuData->trisSize = tris_size;
-#else
-			this->tris->assign(tris, tris + tris_size);
-#endif
+			this->m_data->tris = tris;
+			this->m_data->trisSize = tris_size;
 		}
 		else
 		{
@@ -210,12 +206,9 @@ CUDA_DEVICE void Node::createNode(Triangle** tris, const unsigned tris_size, uns
 			if(noSplitCost < lowestCost || depth > maxDepth)
 			{
 				leaf = true;
-#ifdef USE_CUDA
-				this->p_gpuData->tris = tris;
-				this->p_gpuData->trisSize = tris_size;
-#else
-				this->tris->assign(tris, tris + tris_size);
-#endif
+
+				this->m_data->tris = tris;
+				this->m_data->trisSize = tris_size;
 			}
 			else
 			{
@@ -235,7 +228,7 @@ CUDA_DEVICE void Node::createNode(Triangle** tris, const unsigned tris_size, uns
 					float bucket_index = floorf((pos - minB) / (maxB - minB) * NUM_BUCKETS);
 
 #else
-					float bucket_index = std::floor((pos - minB) / (maxB - minB) * Node::originialNumBuckets);
+					float bucket_index = std::floor((pos - minB) / (maxB - minB) * NUM_BUCKETS);
 #endif
 
 					if (pos <= splitBucketIndex)
@@ -259,12 +252,8 @@ CUDA_DEVICE void Node::createNode(Triangle** tris, const unsigned tris_size, uns
 				if(splitIndex == tris_size-1 || splitIndex == 0)
 				{
 					leaf = true;
-#ifdef USE_CUDA
-					this->p_gpuData->tris = tris;
-					this->p_gpuData->trisSize = tris_size;
-#else
-					this->tris->assign(tris, tris + tris_size);
-#endif
+					this->m_data->tris = tris;
+					this->m_data->trisSize = tris_size;
 				}
 				else
 				{

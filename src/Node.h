@@ -18,20 +18,15 @@ public:
 		left = nullptr;
 		right = nullptr;
 
-#ifdef USE_CUDA
-		p_gpuData = new GpuData();
-#endif
+		m_data = new Data();
+
 	}
 	CUDA_HOST CUDA_DEVICE ~Node() {
 		if(left)
 			delete left;
 		if(right)
 			delete right;
-#ifdef USE_CUDA
-		delete p_gpuData;
-#else
-		delete tris;
-#endif
+		delete m_data;
 		delete aabb;
 		delete[] bucketList;
 	}
@@ -44,24 +39,20 @@ public:
 	BoundingBox* aabb;
 	
 	//contains all tris in the node
-#ifdef USE_CUDA
-	struct GpuData
+	struct Data
 	{
 		//array of finalized device pointers
 		Triangle** tris;
 		size_t trisSize;
 	};
 
-	GpuData* p_gpuData;
-//#else
-	vector<Triangle*>* tris;
-#endif
+	Data* m_data;
 
 	//Recursive function that builds KdTree
 		//tris == triangles to store/split
 		//depth == determines split axis
 #ifndef USE_CUDA
-	void createNode(vector<Triangle*>* tris, unsigned depth);
+	void createNode(vector<Triangle*>& tris, unsigned depth);
 #endif
 
 	CUDA_DEVICE void createNode(Triangle** tris, unsigned tris_size, unsigned depth);

@@ -21,6 +21,7 @@ void Core::render()
 		std::cerr << "Error initializing renderer!" << std::endl;
 
 #else
+	std::cout << "starting rendering..." << std::endl;
 	for(int i = 0; i < renderer->image->width; i++)
 	{
 		for(int j = 0; j < renderer->image->height; j++)
@@ -35,7 +36,6 @@ void Core::render()
 	}
 	threadPool.doneAddingJobs();
 	threadPool.joinThreads();
-
 #endif
 
 }

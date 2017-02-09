@@ -14,21 +14,20 @@ int main() {
 	Logger::enabled = false;
 	Logger::title = "DIV 32";
 
+#ifdef USE_CUDA
 	//temporary hard-coded values to ensure we don't run out of memory
 	//TODO: dynamically determine space needed
-	size_t stackSize = 10000; //10kb stack size
-	size_t heapSize = 4e7;
+	size_t stackSize = 10000; //10kb stack size based on function requirements
 	cudaDeviceSetLimit(cudaLimitStackSize, stackSize);
-	//cudaDeviceSetLimit(cudaLimitMallocHeapSize, heapSize);
 	size_t sSize;
 	size_t hSize;
 	cudaDeviceGetLimit(&sSize, cudaLimitStackSize);
 	cudaDeviceGetLimit(&hSize, cudaLimitMallocHeapSize);
 	std::cout << "Stack Size: " << sSize << ", Heap Size: " << hSize << std::endl;
-
+#endif
 	//create image and set output path
 	Image* image = new Image(1920, 1080);
-    std::string outputImagePath = get_image_path("CUDA_test4.png");
+    std::string outputImagePath = get_image_path("CPU_test.png");
 
     Camera* camera = new Camera();
 	camera->setPosition(glm::vec3(0, 0, 1));
@@ -137,9 +136,11 @@ int main() {
 	delete camera;
 	delete scene;
 
+#ifdef USE_CUDA
 	//To fix current issue in NVIDIA Visual Profiler
 	CUDA_CHECK_ERROR(cudaDeviceSynchronize());
 	CUDA_CHECK_ERROR(cudaProfilerStop());
+#endif
 	std::cout << "Done" << std::endl;
 
 	return 0;

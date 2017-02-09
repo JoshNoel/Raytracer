@@ -64,7 +64,6 @@ bool GeometryObj::loadOBJ(CudaLoader& cudaLoader, const std::string& path, std::
 			////triObject is a device pointer
 			std::string materialName;
 			std::vector<Triangle**> tris;
-			tris.reserve(200);
 			BoundingBox* aabb = new BoundingBox();
 			TriObject::loadOBJ(tris, aabb, position, path, objectLineCounter, materialName, vertexOffset, uvOffset, cudaLoader);
 

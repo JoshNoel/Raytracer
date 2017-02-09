@@ -32,32 +32,17 @@ CUDA_DEVICE bool TriObject::checkTris(Node* node, Ray& ray, float& thit0, float&
 {
 	//iterate triangles and test if there is an intersection
 	bool hit = false;
-#ifdef USE_CUDA
 	//use gpuData if using cuda
-	for (unsigned i = 0; i <node->p_gpuData->trisSize; i++)
+	for (unsigned i = 0; i <node->m_data->trisSize; i++)
 	{
-		if (node->p_gpuData->tris[i]->intersects(ray, thit0, thit1))
+		if (node->m_data->tris[i]->intersects(ray, thit0, thit1))
 		{
 
 			if (thit0 < ray.thit0)
-				ray.hitTri = node->p_gpuData->tris[i];
+				ray.hitTri = node->m_data->tris[i];
 			hit = true;
 		}
 	}
-#else
-	vector<Triangle*>::const_iterator i;
-	for(i = node->tris->begin(); i != node->tris->end(); ++i)
-	{
-		if((*i)->intersects(ray, thit0, thit1))
-		{
-
-			if(thit0 < ray.thit0)
-				ray.hitTri = *i;
-			hit = true;
-		}
-	}
-#endif
-
 	return hit;
 }
 
@@ -94,7 +79,7 @@ CUDA_DEVICE void TriObject::initAccelStruct()
 	//TODO: create a device function that recursivly creates kernels
 	root->createNode(gpuData->tris, gpuData->trisSize, 0);
 #else
-	root->createNode(&tris, 0);
+	root->createNode(tris, 0);
 #endif
 }
 
@@ -125,8 +110,23 @@ bool TriObject::loadOBJ(std::vector<Triangle**>& tris, BoundingBox* aabb, glm::v
 	if(path.substr(extStart) != ".obj")
 		return false;
 
-	std::string line;
+	//first count number of tris to preallocate tris vector
+	std::ifstream face_count_ifs;
+	std::string face_count_line;
+	long face_count = 0;
+	face_count_ifs.open(path);
+	if (!face_count_ifs.is_open())
+		return false;
+	while (getline(face_count_ifs, face_count_line)) {
+		if (face_count_line[0] = 'f')
+			face_count++;
+	}
+	face_count_ifs.close();
+	tris.reserve(face_count);
 
+
+	std::string line;
+	
 	std::ifstream ifs;
 	ifs.open(path);
 	if(!ifs.is_open())

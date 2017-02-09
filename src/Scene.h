@@ -97,7 +97,7 @@ public:
 	}
 
 
-
+//gpudata access functions
 #ifdef USE_CUDA
 
 	CUDA_HOST CUDA_DEVICE GpuData* getGpuData() const {

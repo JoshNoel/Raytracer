@@ -7,18 +7,25 @@ SET(CXX_STANDARD_REQUIRED ON)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
 
-find_package(CUDA QUIET REQUIRED)
-set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};--gpu-architecture=sm_50;-std=c++11")
+#find_package(CUDA QUIET)
+
+if(CUDA_FOUND)
+	set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};--gpu-architecture=sm_50;-std=c++11")
+	set(NVIDIA_SAMPLES_DIR "" CACHE PATH "Path to nvidia samples include directory for use in utility functions")
+	INCLUDE_DIRECTORIES("${NVIDIA_SAMPLES_DIR}/common/inc")
+	if(NVIDIA_SAMPLES_DIR STREQUAL "")
+		message(SEND_ERROR "NVIDIA_SAMPLES_DIR must be set.")
+	endif()
+	
+	add_definitions(-DUSE_CUDA)
+	add_definitions(-DGLM_FORCE_CUDA)
+endif()
 
 SET(EXECUTABLE_OUTPUT_PATH bin)
 
 INCLUDE_DIRECTORIES(src)
 
-set(NVIDIA_SAMPLES_DIR "" CACHE PATH "Path to nvidia samples include directory for use in utility functions")
-INCLUDE_DIRECTORIES("${NVIDIA_SAMPLES_DIR}/common/inc")
-if(NVIDIA_SAMPLES_DIR STREQUAL "")
-	message(SEND_ERROR "NVIDIA_SAMPLES_DIR must be set.")
-endif()
+
 	
 set(GLM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib/glm" CACHE PATH "Path to glm include directory")
 INCLUDE_DIRECTORIES(${GLM_INCLUDE_DIR})
@@ -33,8 +40,6 @@ set(LOGS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/docs/logs" CACHE PATH "Path to folder 
 add_definitions(-DMESH_DIR=${MESH_DIR})
 add_definitions(-DIMAGE_OUTPUT_DIR=${IMAGE_OUTPUT_DIR})
 add_definitions(-DLOGS_DIR=${LOGS_DIR})
-add_definitions(-DUSE_CUDA)
-add_definitions(-DGLM_FORCE_CUDA)
 add_definitions(-DGLM_ENABLE_EXPERIMENTAL)
 
 CONFIGURE_FILE( src/RaytracerConfig.h.in config/RaytracerConfig.h)
@@ -67,32 +72,62 @@ set(SOURCE_FILES
 #need to set .cpp files to cuda source files so they are compiled with nvcc rather than host compiler
 set_source_files_properties(${SOURCE_FILES} PROPERTIES CUDA_SOURCE_PROPERTY_FORMAT OBJ)
 
-
-CUDA_ADD_EXECUTABLE(Raytracer
-	${SOURCE_FILES}
-	${LODEPNG_DIR}/lodepng.cpp
-	${PROJECT_BINARY_DIR}/config/RaytracerConfig.h
-	src/BoundingBox.h
-	src/Camera.h
-	src/GeometryObj.h
-	src/Image.h
-	src/Intersection.h
-	src/Light.h
-	src/Logger.h
-	src/helper/array.h
-	src/helper/resource_helper.h
-	src/Material.h
-	src/Node.h
-	src/Plane.h
-	src/Ray.h
-	src/Renderer.h
-	src/Scene.h
-	src/Shape.h
-	src/Sphere.h
-	src/TriObject.h
-	src/Triangle.h
-	src/Texture.h 
-	src/ThreadPool.h
-	src/WorkQueue.h
-	src/Core.h
-	src/CudaLoader.h)
+if(CUDA_FOUND)
+	CUDA_ADD_EXECUTABLE(Raytracer
+		${SOURCE_FILES}
+		${LODEPNG_DIR}/lodepng.cpp
+		${PROJECT_BINARY_DIR}/config/RaytracerConfig.h
+		src/BoundingBox.h
+		src/Camera.h
+		src/GeometryObj.h
+		src/Image.h
+		src/Intersection.h
+		src/Light.h
+		src/Logger.h
+		src/helper/array.h
+		src/helper/resource_helper.h
+		src/Material.h
+		src/Node.h
+		src/Plane.h
+		src/Ray.h
+		src/Renderer.h
+		src/Scene.h
+		src/Shape.h
+		src/Sphere.h
+		src/TriObject.h
+		src/Triangle.h
+		src/Texture.h 
+		src/ThreadPool.h
+		src/WorkQueue.h
+		src/Core.h
+		src/CudaLoader.h)
+else()
+	ADD_EXECUTABLE(Raytracer
+		${SOURCE_FILES}
+		${LODEPNG_DIR}/lodepng.cpp
+		${PROJECT_BINARY_DIR}/config/RaytracerConfig.h
+		src/BoundingBox.h
+		src/Camera.h
+		src/GeometryObj.h
+		src/Image.h
+		src/Intersection.h
+		src/Light.h
+		src/Logger.h
+		src/helper/array.h
+		src/helper/resource_helper.h
+		src/Material.h
+		src/Node.h
+		src/Plane.h
+		src/Ray.h
+		src/Renderer.h
+		src/Scene.h
+		src/Shape.h
+		src/Sphere.h
+		src/TriObject.h
+		src/Triangle.h
+		src/Texture.h 
+		src/ThreadPool.h
+		src/WorkQueue.h
+		src/Core.h
+		src/CudaLoader.h)
+endif()

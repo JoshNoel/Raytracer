@@ -103,7 +103,7 @@ public:
 	CUDA_DEVICE void initAccelStruct();
 
 #ifndef USE_CUDA
-	vector<Triangle**> tris;
+	vector<Triangle*> tris;
 #endif
 	Node* root;
 	

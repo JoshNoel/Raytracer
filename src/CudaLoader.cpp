@@ -135,7 +135,8 @@ Triangle** CudaLoader::loadTriangle(Triangle::parameters&& params)
 	trianglePointerList.push_back(nullptr);
 	return &trianglePointerList.back();
 #else
-	return new Triangle(params.points, params.calcNormal, params.position, params.uv_array, params.aabb);
+	trianglePointerList.push_back(new Triangle(params.getPoints(), params.getCalcNormal(), params.getPosition(), params.getUvArray(), params.getBoundingBox()));
+	return &trianglePointerList.back();
 #endif
 }
 
@@ -149,7 +150,8 @@ TriObject** CudaLoader::loadTriObject(TriObject::parameters&& params)
 	triObjectPointerList.push_back(nullptr);
 	return &triObjectPointerList.back();
 #else
-	return new TriObject(params.points, params.calcNormal, params.position, params.uv_array, params.aabb);
+	triObjectPointerList.push_back(new TriObject(params.getPosition(), params.getFlipNormals()));
+	return &triObjectPointerList.back();
 #endif
 }
 
@@ -163,7 +165,8 @@ Sphere** CudaLoader::loadSphere(Sphere::parameters&& params)
 	spherePointerList.push_back(nullptr);
 	return &spherePointerList.back();
 #else
-	return new Sphere(params.points, params.calcNormal, params.position, params.uv_array, params.aabb);
+	spherePointerList.push_back(new Sphere(params.getPosition(), params.getRadius()));
+	return &spherePointerList.back();
 #endif
 }
 
@@ -176,8 +179,9 @@ Plane** CudaLoader::loadPlane(Plane::parameters&& params)
 
 	planePointerList.push_back(nullptr);
 	return &planePointerList.back();
-	#else
-	return new Plane(params.points, params.calcNormal, params.position, params.uv_array, params.aabb);
+#else
+	planePointerList.push_back(new Plane(params.getPosition(), params.getXAngle(), params.getYAngle(), params.getZAngle(), params.getDimensions()));
+	return &planePointerList.back();
 #endif
 }
 
@@ -278,10 +282,22 @@ void CudaLoader::loadShapePointers()
 
 void CudaLoader::queueData(TriObject** destination, const std::vector<Triangle**>& tris, BoundingBox* aabb)
 {
+#ifdef USE_CUDA
 	//at this point Shape device pointers are not initialized, so one must still deal with the pointers to them as they will be replaced through loadShapePointers
 	triObjectDataList.emplace_back(destination, tris, aabb);
+#else
+	//the double pointer was for cuda support. TriObject holds vector of Triangle*, so all pointers in tris vector must be dereferenced
+	std::vector<Triangle*> p_tris;
+	for(auto pointer : tris) {
+		p_tris.push_back(*pointer);
+	}
+	(*destination)->tris = p_tris;
+	(*destination)->aabb = aabb;
+	(*destination)->initAccelStruct();
+#endif
 }
 
+#ifdef USE_CUDA
 CUDA_GLOBAL void data_loader(TriObject** objects_list, unsigned objects_list_size, TriObject::GpuData* data_list)
 {
 	for(unsigned i = 0; i < objects_list_size; i++)
@@ -290,7 +306,7 @@ CUDA_GLOBAL void data_loader(TriObject** objects_list, unsigned objects_list_siz
 		objects_list[i]->initAccelStruct();
 	}
 }
-
+#endif
 void CudaLoader::loadData(std::vector<std::unique_ptr<GeometryObj>>& geometryObjs)
 {
 #ifdef USE_CUDA
@@ -333,17 +349,6 @@ void CudaLoader::loadData(std::vector<std::unique_ptr<GeometryObj>>& geometryObj
 	data_loader KERNEL_ARGS2(1, 1)(d_objectList, objectList.size(), d_gpuDataList);
 
 	CUDA_CHECK_ERROR(cudaDeviceSynchronize());
-
-
-
-#else
-	//if not using cuda we can load data to triangle objects and initialize acceleration structure on host
-	for(auto data : triObjectDataList)
-	{
-		data.obj->tris = data.tris;
-		data.obj->aabb = data.aabb;
-		data.obj->initAccelStruct();
-	}
 #endif
 }
 

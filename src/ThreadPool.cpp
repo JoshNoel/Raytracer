@@ -18,12 +18,13 @@ ThreadPool::ThreadPool(const Renderer* renderer)
 
 	this->numThreads = numCores;
 
+#ifndef USE_CUDA
+
 	//construct all threads then start to avoid threads starting before renderThread is fully constructed
 	for(int i = 0; i < numThreads; i++)
 	{
 		threadList.emplace_back(&jobQueue, renderer);
 	}
-#ifndef USE_CUDA
 	for (int i = 0; i < numThreads; i++) 
 	{
 		threadList[i].start();
@@ -93,7 +94,7 @@ void ThreadPool::RenderThread::run()
 #ifndef USE_CUDA
 				glm::vec3 color = p_renderer->renderPixel(job.x(), job.y());
 				p_renderer->writeImage(color, job.x(), job.y());
-#endif USE_CUDA
+#endif
 			}
 			else
 			{

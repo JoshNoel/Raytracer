@@ -93,6 +93,7 @@ public:
 
 
 	///Queues data for copy to destination through CudaLoader::loadData()
+	///assigns tris and aabb to triobject (destination)
 	void queueData(TriObject** destination, const std::vector<Triangle**>& tris, BoundingBox* aabb);
 
 	///Loads queued data to device

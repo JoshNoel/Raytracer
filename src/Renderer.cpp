@@ -148,6 +148,7 @@ bool Renderer::init()
 	return true;
 }
 
+#ifdef USE_CUDA
 CUDA_GLOBAL void setup_curand(curandState_t* states, unsigned long seed) {
 	curand_init(seed, threadIdx.x + blockIdx.x * blockDim.x, 0, &states[threadIdx.x + blockIdx.x * blockDim.x]);
 }
@@ -194,15 +195,14 @@ CUDA_GLOBAL void render_kernel(Renderer* renderer, curandState_t* states) {
 	//needs scene.bg, ray, scene.lights, scene.objects,
 }
 
-#ifdef USE_CUDA
+
 void Renderer::renderKernel(dim3 kernelDim, dim3 blockDim, curandState_t* states) 
 {
 	render_kernel KERNEL_ARGS2(kernelDim, blockDim) (this, states);
 }
 
-#endif
 
-#ifdef USE_CUDA
+
 void Renderer::renderCuda() {
 	//TODO: Break image into sectors to provide greater kernel size flexibility
 

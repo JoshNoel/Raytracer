@@ -16,7 +16,11 @@ public:
 		: material(mat)
 	{
 		static_assert(std::is_base_of<Shape, T_Shape>::value, "Reference to pointer passed to Constructor must be derived from Shape");
+#ifdef USE_CUDA
 		p_host_shape = reinterpret_cast<Shape**>(s);
+#else
+		shape = *reinterpret_cast<Shape**>(s);
+#endif
 	}
 
 	template<typename T_Shape>
