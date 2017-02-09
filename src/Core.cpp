@@ -21,21 +21,25 @@ void Core::render()
 		std::cerr << "Error initializing renderer!" << std::endl;
 
 #else
-	std::cout << "starting rendering..." << std::endl;
-	for(int i = 0; i < renderer->image->width; i++)
-	{
-		for(int j = 0; j < renderer->image->height; j++)
+	if (!renderer->init())
+		std::cerr << "Error initializing renderer!" << std::endl;
+	else {
+		std::cout << "Starting rendering..." << std::endl;
+		for (int i = 0; i < renderer->image->width; i++)
 		{
-			bool added = false;
-			while(!added)
+			for (int j = 0; j < renderer->image->height; j++)
 			{
-				if(threadPool.addJob(ThreadPool::ThreadJob(i, j)))
-					added = true;			
+				bool added = false;
+				while (!added)
+				{
+					if (threadPool.addJob(ThreadPool::ThreadJob(i, j)))
+						added = true;
+				}
 			}
 		}
+		threadPool.doneAddingJobs();
+		threadPool.joinThreads();
 	}
-	threadPool.doneAddingJobs();
-	threadPool.joinThreads();
 #endif
 
 }

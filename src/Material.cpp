@@ -196,6 +196,8 @@ void Material::setTexture(const Texture& tex)
 const float Material::IOR::AIR = 1.0f;
 const float Material::IOR::WATER = 4.0f/3.0f;
 const float Material::IOR::ICE = 1.31f;
+const float Material::IOR::GLASS = 1.66f;
+
 
 //Initialize constant colors
 const glm::vec3 Material::COLORS::WHITE = glm::vec3(255, 255, 255);

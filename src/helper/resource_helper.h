@@ -10,6 +10,13 @@ inline std::string get_obj_path(std::string&& p_obj_name) {
 	return s;
 }
 
+//textures are stored with obj files
+inline std::string get_texture_path(std::string&& p_tex_name) {
+	std::string s = MESH_DIR;
+	s += '/' + p_tex_name;
+	return s;
+}
+
 inline std::string get_image_path(std::string&& p_image_name) {
 	std::string s = IMAGE_OUTPUT_DIR;
 	s += '/' + p_image_name;

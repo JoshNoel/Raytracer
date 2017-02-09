@@ -16,7 +16,7 @@ ThreadPool::ThreadPool(const Renderer* renderer)
 	if(numCores == 0)
 		numCores = 4;	
 
-	this->numThreads = numCores;
+	this->numThreads = std::floor(float(numCores) * (2.0f/3.0f));
 
 #ifndef USE_CUDA
 

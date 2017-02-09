@@ -143,7 +143,8 @@ public:
 	int idCounter = 0;
 
 	//static const int host variable (and float if not on windows) can be accessed directly by device
-	static const int MAX_RECURSION_DEPTH = 2;
+	//max number of bounces a ray can take before terminating
+	static const int MAX_RECURSION_DEPTH = 3;
 
 	//samples to cast to an area light to determine shadow intensity
 		//if a ray doesn't intersect an object on the way to the light, the point is lit

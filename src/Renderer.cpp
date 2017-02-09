@@ -267,7 +267,7 @@ glm::vec3 Renderer::renderPixel(int pixelX, int pixelY) const
 #endif
 void Renderer::writeImage(glm::vec3 color, int x, int y) const
 {
-	(&(*image)[x])[y] = color;
+	(*image)[x + y*image->width] = color;
 }
 
 CUDA_DEVICE bool Renderer::hitsObject(Ray& ray, float& thit0, float& thit1) const
@@ -484,7 +484,6 @@ CUDA_DEVICE glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, in
 					}
 					else
 					{
-
 						//if its not an area light, treat it as a simple point light with hard visible/not visible falloff
 						shadowRay.dir = light->pos - shadowRay.pos;
 						float lightRadius = glm::length(shadowRay.dir);
@@ -667,7 +666,7 @@ CUDA_DEVICE glm::vec3 Renderer::castRay(Ray& ray, float& thit0, float& thit1, in
 			}
 
 			//add ambient light (no point can be completely black to add realism due to indirect lighting effects)
-			finalCol += +ambientColor * ambientIntensity;
+			finalCol += ambientColor * ambientIntensity;
 		}
 
 

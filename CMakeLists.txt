@@ -11,6 +11,7 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
 if(CUDA_FOUND)
 	set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};--gpu-architecture=sm_50;-std=c++11")
+
 	set(NVIDIA_SAMPLES_DIR "" CACHE PATH "Path to nvidia samples include directory for use in utility functions")
 	INCLUDE_DIRECTORIES("${NVIDIA_SAMPLES_DIR}/common/inc")
 	if(NVIDIA_SAMPLES_DIR STREQUAL "")

@@ -24,6 +24,7 @@ public:
 		static const float AIR;
 		static const float WATER;
 		static const float ICE;
+		static const float GLASS;
 
 	private:
 		IOR(){}
@@ -81,6 +82,7 @@ public:
 		const float AIR = Material::IOR::AIR;
 		const float WATER = Material::IOR::WATER;
 		const float ICE = Material::IOR::ICE;
+		const float GLASS = Material::IOR::GLASS;
 	} CONSTS;
 #endif
 
