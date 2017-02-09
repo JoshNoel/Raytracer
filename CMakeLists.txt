@@ -6,22 +6,26 @@ SET(CXX_STANDARD 11)
 SET(CXX_STANDARD_REQUIRED ON)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
+set(TRY_BUILD_CUDA ON CACHE BOOL "Whether or not to try to build with CUDA functionality")
 
-#find_package(CUDA QUIET)
 
-if(CUDA_FOUND)
-	set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};--gpu-architecture=sm_50;-std=c++11")
+if(TRY_BUILD_CUDA)
+	find_package(CUDA QUIET)
 
-	set(NVIDIA_SAMPLES_DIR "" CACHE PATH "Path to nvidia samples include directory for use in utility functions")
-	INCLUDE_DIRECTORIES("${NVIDIA_SAMPLES_DIR}/common/inc")
-	if(NVIDIA_SAMPLES_DIR STREQUAL "")
-		message(SEND_ERROR "NVIDIA_SAMPLES_DIR must be set.")
+	if(CUDA_FOUND)
+		set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};--gpu-architecture=sm_50;-std=c++11")
+
+		set(NVIDIA_SAMPLES_DIR "" CACHE PATH "Path to nvidia samples include directory for use in utility functions")
+		INCLUDE_DIRECTORIES("${NVIDIA_SAMPLES_DIR}/common/inc")
+		if(NVIDIA_SAMPLES_DIR STREQUAL "")
+			message(SEND_ERROR "NVIDIA_SAMPLES_DIR must be set.")
+		endif()
+		
+		
+		add_definitions(-DUSE_CUDA)
+		add_definitions(-DGLM_FORCE_CUDA)
 	endif()
-	
-	add_definitions(-DUSE_CUDA)
-	add_definitions(-DGLM_FORCE_CUDA)
 endif()
-
 SET(EXECUTABLE_OUTPUT_PATH bin)
 
 INCLUDE_DIRECTORIES(src)

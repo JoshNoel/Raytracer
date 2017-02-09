@@ -156,6 +156,7 @@ int main() {
 	Logger::record("Render Time");
 
 
+	std::cout << "Writing image at: " << outputImagePath << std::endl;
 	image->outputPNG(outputImagePath);
 	Logger::printLog(get_log_path("Timing_Log_cuda.txt"));
 

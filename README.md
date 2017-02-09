@@ -1,9 +1,12 @@
 # Raytracer
 CUDA-enabled 3D Raytracer
 
-Must enable CUDA_SEPARABLE_COMPILATION CMake option manually
-May have to build twice for linking to work
-
+==============USAGE====================
+CUDA
+	Must enable CUDA_SEPARABLE_COMPILATION CMake option manually
+	May have to build twice for linking to work
+CPU
+	To disable CUDA build when it is available on your device, set cmake variable TRY_BUILD_CUDA=OFF
 
 
 ================================================================================
